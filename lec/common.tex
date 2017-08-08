@@ -1,0 +1,16 @@
+\usepackage{fancyhdr}
+\usepackage[sort&compress]{natbib}
+\usepackage[letterpaper=true,colorlinks=true,linkcolor=black]{hyperref}
+
+\input{commonm}
+
+\newcommand{\hdr}[2]{
+  \pagestyle{fancy}
+  \lhead{Bindel, Fall 2017}
+  \rhead{Parallel Computing (CS 5220)}
+  \fancyfoot{}
+  \begin{center}
+    {\large{\bf Notes for #1}}
+  \end{center}
+  \lstset{language=matlab,columns=flexible}
+}

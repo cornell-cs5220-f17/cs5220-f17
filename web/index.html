@@ -1,0 +1,51 @@
+---
+title: Home
+layout: top
+---
+
+{% include cs5220_head.html %}
+
+<div class="row">
+  
+  <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
+    <h2>News</h2>
+    {% assign counter = 0 %}
+    {% for entry in site.data.news reversed %}
+    {%   if counter < 5 %}
+    {%     include news_entry.html %}
+    {%   endif %}
+    {%   assign counter = counter | plus: 1 %}                  
+    {% endfor %}
+    <a class="btn" href="news.html">Older news &raquo;</a>
+  </div>
+
+  <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
+    <h2>Overview</h2>
+    <p>
+      CS 5220 is an introduction to performance tuning and parallelization,
+      particularly for scientific codes. Topics include:
+    </p>
+    <ul>
+      <li>Single-processor architecture, caches, and serial performance tuning</li>
+      <li>Basics of parallel machine organization</li>
+      <li>Distributed memory programming with MPI</li>
+      <li>Shared memory programming with OpenMP</li>
+      <li>Parallel patterns: data partitioning, synchronization, and load balancing</li>
+      <li>Examples of parallel numerical algorithms</li>
+      <li>Applications from science and engineering</li>
+    </ul>
+    <p>
+      Students should be able to read and write serial programs written in C
+      or a related language.  Because our examples will be drawn primarily
+      from engineering and scientific computations, some prior exposure to
+      numerical methods is useful, though not necessary.  Prior exposure to
+      parallel programming is not required, and non-CS students from fields
+      involving simulation are particularly welcome!
+    </p>
+    <p>
+      See <a href="syllabus.html">the syllabus</a> for more
+      information on course logistics.
+    </p>
+  </div>
+  
+</div>
