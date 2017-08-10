@@ -1,98 +1,158 @@
 # ==================
 # Week 1
 #
-- date: 2017-08-22
-- date: 2017-08-24
+-
+  date: 2017-08-22
+  info: Introduction
+-
+  date: 2017-08-24
+  info: Performance basics
 #
 # ==================
 # Week 2
 #
-- date: 2017-08-29
-- date: 2017-08-31
+-
+  date: 2017-08-29
+  info: Single processor architecture
+-
+  date: 2017-08-31
+  info: Basic optimizations
 #
 # ==================
 # Week 3
 #
-- date: 2017-09-05
-- date: 2017-09-07
+-
+  date: 2017-09-05
+  info: Parallel machines and programming models
+-
+  date: 2017-09-07
+  info: Parallel machines and programming models
 #
 # ==================
 # Week 4
 #
-- date: 2017-09-12
-- date: 2017-09-14
+-
+  date: 2017-09-12
+  info: Parallelism and locality in simulations
+-
+  date: 2017-09-14
+  info: Parallelism and locality in simulations
 #
 # ==================
 # Week 5
 #
-- date: 2017-09-19
-- date: 2017-09-21
+-
+  date: 2017-09-19
+  info: Distributed memory programming
+-
+  date: 2017-09-21
+  info: Distributed memory programming
 #
 # ==================
 # Week 6
 #
-- date: 2017-09-26
-- date: 2017-09-28
+-
+  date: 2017-09-26
+  info: Shared memory programming
+-
+  date: 2017-09-28
+  info: Shared memory programming
 #
 # ==================
 # Week 7
 #
-- date: 2017-10-03
-- date: 2017-10-05
+-
+  date: 2017-10-03
+  info: Heterogeneity and accelerators
+-
+  date: 2017-10-05
+  info: Heterogeneity and accelerators
 #
 # ==================
 # Week 8
 #
-- date: 2017-10-10
+-
+  date: 2017-10-10
   break: Fall break
-- date: 2017-10-12
+-
+  date: 2017-10-12
+  info: VMs, containers, and clouds
 #
 # ==================
 # Week 9
 #
-- date: 2017-10-17
-- date: 2017-10-19
+-
+  date: 2017-10-17
+  info: Dense linear algebra
+-
+  date: 2017-10-19
+  info: Dense linear algebra
 #
 # ==================
 # Week 10
 #
-- date: 2017-10-24
-- date: 2017-10-26
+-
+  date: 2017-10-24
+  info: Sparse linear algebra
+-
+  date: 2017-10-26
+  info: Sparse linear algebra
 #
 # ==================
 # Week 11
 #
-- date: 2017-10-31
+-
+  date: 2017-10-31
   travel: IPAM meeting
-- date: 2017-11-02
+  info: Transforms and data sparsity (guest)
+-
+  date: 2017-11-02
   travel: IPAM meeting
+  info: Asynchronous methods (guest)
 #
 # ==================
 # Week 12
 #
-- date: 2017-11-07
-- date: 2017-11-09
+-
+  date: 2017-11-07
+  info: Graph partitioning
+-
+  date: 2017-11-09
+  info: Load balancing
 #
 # ==================
 # Week 13
 #
-- date: 2017-11-14
-- date: 2017-11-16
+-
+  date: 2017-11-14
+  info: Parallel graph algorithms
+-
+  date: 2017-11-16
+  info: Communication avoidance
 #
 # ==================
 # Week 14
 #
-- date: 2017-11-21
-- date: 2017-11-23
+-
+  date: 2017-11-21
+  info: Floating point and precision
+-
+  date: 2017-11-23
   break: Thanksgiving
 #
 # ==================
 # Week 15
 #
-- date: 2017-11-28
-- date: 2017-11-30
+-
+  date: 2017-11-28
+  info: The future of HPC
+-
+  date: 2017-11-30
+  info: Project presentations
 #
 # ==================
 # Week 16
 #
-- date: 2017-12-05
+-
+  date: 2017-12-05
+  info: Project presentations
