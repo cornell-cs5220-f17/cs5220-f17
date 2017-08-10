@@ -39,6 +39,34 @@ numerical methods is useful, though not necessary.  Prior exposure to
 parallel programming is not required, and non-CS students from fields
 involving simulation are particularly welcome!
 
+### Course work
+
+The course work consists of:
+
+- *Lecture*: Participation is expected!  Notes will be posted online
+  in advance of the meeting, and students should come with questions.
+  The last 15 minutes of each 75 minute period will be devoted to a
+  "mini-practicum" in which we do live coding demonstrations and 
+  hands-on demonstrations of software tools.
+- *Homework*: Homework assignments are done individually, and are
+  meant to ensure students have the basic skills needed to work on
+  parallel machines and to modify, build, and time parallel codes.
+  Homework will be posted on Tuesday and due the following Tuesday
+- *Projects*: There will be three projects that involve performance
+  tuning of a scientific computing kernel or small code.  In each
+  case, a reference code will be provided; students are
+  responsible for parallelizing the code, tuning it, and running
+  performance experiments and analyses.  These are more significant
+  than the homeworks, and will run 2-3 weeks.
+- *Final projects*: In addition to the assigned projects, students
+  will complete a significant final project of their own choosing.  We will
+  suggest final projects, or students may bring projects of their
+  own.  Group projects are encouraged!  Final project proposals will
+  be due immediately after fall break, and groups are expected to make
+  steady progress on the project in November and early December.  The
+  last two lectures are reserved for project presentations, with a
+  final project report due on December 7.
+
 ### Texts
 
 The class will be taught from lecture notes, which will be posted as
