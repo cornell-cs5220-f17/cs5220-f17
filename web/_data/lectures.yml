@@ -35,10 +35,11 @@
 -
   date: 2017-09-12
   info: Parallelism and locality in simulations
-  hw: P1 due, P2 out
+  hw: P1 due
 -
   date: 2017-09-14
   info: Parallelism and locality in simulations
+  hw: P2 out
 #
 # ==================
 # Week 5
@@ -56,7 +57,6 @@
 -
   date: 2017-09-26
   info: Shared memory programming
-  hw: P2 due, P3 out
 -
   date: 2017-09-28
   info: Shared memory programming
@@ -70,7 +70,7 @@
 -
   date: 2017-10-05
   info: Heterogeneity and accelerators
-  hw: P3 due
+  hw: P2 due
 #
 # ==================
 # Week 8
@@ -81,6 +81,7 @@
 -
   date: 2017-10-12
   info: VMs, containers, and clouds
+  hw: P3 out
 #
 # ==================
 # Week 9
@@ -88,7 +89,7 @@
 -
   date: 2017-10-17
   info: Dense linear algebra
-  hw: Project proposals
+  hw: Project proposals due
 -
   date: 2017-10-19
   info: Dense linear algebra
@@ -102,7 +103,6 @@
 -
   date: 2017-10-26
   info: Sparse linear algebra
-  hw: P3 due
 #
 # ==================
 # Week 11
@@ -111,6 +111,7 @@
   date: 2017-10-31
   travel: IPAM meeting
   info: Transforms and data sparsity (guest)
+  hw: P3 due
 -
   date: 2017-11-02
   travel: IPAM meeting
@@ -122,10 +123,10 @@
 -
   date: 2017-11-07
   info: Graph partitioning
-  hw: Project check-in
 -
   date: 2017-11-09
   info: Load balancing
+  hw: Project check-in
 #
 # ==================
 # Week 13
