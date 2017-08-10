@@ -3,7 +3,7 @@ title:      Syllabus
 layout:     main
 ---
 
-### Logistical information
+## Logistical information
 
 CS 5220, Fall 2017: Applications of Parallel Computers  
 Lecture time: TR 8:40-9:55  
