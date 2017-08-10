@@ -8,6 +8,6 @@ if [[ -z $DBUS_SESSION_BUS_ADDRESS ]]; then
   fi
 fi
 
-cd /home/bindel/work/class/cs5220-s18/web
+cd /home/bindel/work/class/cs5220-f17/web
 git pull origin
 rake deploy
