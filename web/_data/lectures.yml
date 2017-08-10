@@ -4,7 +4,6 @@
 -
   date: 2017-08-22
   info: Introduction
-  hw: HW0
 -
   date: 2017-08-24
   info: Performance basics
@@ -15,6 +14,7 @@
 -
   date: 2017-08-29
   info: Single processor architecture
+  hw: HW0 due
 -
   date: 2017-08-31
   info: Basic optimizations
@@ -26,6 +26,7 @@
 -
   date: 2017-09-05
   info: Parallel machines and models
+  hw: HW1 due
 -
   date: 2017-09-07
   info: Parallel machines and models
@@ -145,6 +146,7 @@
 -
   date: 2017-11-21
   info: Floating point and precision
+  hw: Final report outline
 -
   date: 2017-11-23
   break: Thanksgiving

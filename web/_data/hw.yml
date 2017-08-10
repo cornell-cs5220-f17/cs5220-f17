@@ -2,10 +2,19 @@
   desc: "HW0: Who are you?"
   due: 2017-08-29
 -
+  desc: "HW1: Building, queueing, profiling"
+  due: 2017-09-05
+-
   desc: "P1: Matrix multiply"
   due: 2017-09-12
 -
-  desc: "P2"
+  desc: "HW2: Getting started with MPI"
+  due: 2017-09-19
+-
+  desc: "HW3: Getting started with OpenMP"
+  due: 2017-09-26
+-
+  desc: "P2: Making waves"
   due: 2017-10-05
 -
   desc: "Final proposal"
