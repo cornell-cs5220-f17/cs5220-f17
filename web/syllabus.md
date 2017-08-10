@@ -19,7 +19,7 @@ TA: Eric Lee
 Email: <ehl59@cornell.edu>  
 OH: TBA or by appointment.
 
-### Course description
+## Course description
 
 CS 5220 is an introduction to performance tuning and parallelization,
 particularly for scientific codes. Topics include:
@@ -82,6 +82,8 @@ Piazza. If you have any problems or feedback for the developers, email
 
 Find our class page at: <http://www.piazza.com/cornell/fall2017/cs5220>.
 
+## Course policies
+
 ### Grading
 
 Graded work will be weighted as follows:
@@ -106,8 +108,6 @@ semester will check with the college to see who has completed course
 evaluation surveys (though we obviously cannot check to see whether
 your feedback is useful!).  Participating in these feedback activities
 counts toward your grade.
-
-## Course policies
 
 ### Collaboration
 
