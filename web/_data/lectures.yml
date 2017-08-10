@@ -4,6 +4,7 @@
 -
   date: 2017-08-22
   info: Introduction
+  hw: HW0
 -
   date: 2017-08-24
   info: Performance basics
@@ -89,7 +90,7 @@
 -
   date: 2017-10-17
   info: Dense linear algebra
-  hw: Final proposals
+  hw: Final proposal
 -
   date: 2017-10-19
   info: Dense linear algebra
@@ -123,10 +124,10 @@
 -
   date: 2017-11-07
   info: Graph partitioning
+  hw: Final check-in
 -
   date: 2017-11-09
   info: Load balancing
-  hw: Final check-in
 #
 # ==================
 # Week 13

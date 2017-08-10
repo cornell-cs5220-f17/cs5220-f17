@@ -1,4 +1,24 @@
 -
-  desc: HW 0
+  desc: "HW0: Who are you?"
   due: 2017-08-29
-  file: hw0
+-
+  desc: "P1: Matrix multiply"
+  due: 2017-09-12
+-
+  desc: "P2"
+  due: 2017-10-05
+-
+  desc: "Final proposal"
+  due: 2017-10-17
+-
+  desc: "P3"
+  due: 2017-11-02
+-
+  desc: "Final check-in"
+  due: 2017-11-07
+-
+  desc: "Final report outline"
+  due: 2017-11-21
+-
+  desc: "Final report"
+  due: 2017-12-07
