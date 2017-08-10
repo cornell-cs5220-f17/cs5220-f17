@@ -49,7 +49,7 @@
 -
   date: 2017-09-19
   info: Distributed memory programming
-  hw: HW2
+  hw: HW2 due
 -
   date: 2017-09-21
   info: Distributed memory programming
@@ -60,7 +60,7 @@
 -
   date: 2017-09-26
   info: Shared memory programming
-  hw: HW3
+  hw: HW3 due
 -
   date: 2017-09-28
   info: Shared memory programming
@@ -105,10 +105,10 @@
 -
   date: 2017-10-24
   info: Sparse linear algebra
+  hw: HW5 due
 -
   date: 2017-10-26
   info: Sparse linear algebra
-  hw: HW5
 #
 # ==================
 # Week 11
