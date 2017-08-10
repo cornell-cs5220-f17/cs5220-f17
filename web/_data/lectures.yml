@@ -71,6 +71,7 @@
 -
   date: 2017-10-03
   info: Heterogeneity and accelerators
+  hw: HW4
 -
   date: 2017-10-05
   info: Heterogeneity and accelerators
@@ -107,6 +108,7 @@
 -
   date: 2017-10-26
   info: Sparse linear algebra
+  hw: HW5
 #
 # ==================
 # Week 11
