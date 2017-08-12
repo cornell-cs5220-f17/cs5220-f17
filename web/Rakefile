@@ -1,8 +1,8 @@
 desc "Manage web site publication"
 
 # Settings
-dest = "/mnt/MyWeb/class/cs5220-s17"  # Destination
-#dest = "cslinux:/courses/cs5220/2017fa"  # Destination
+#dest = "/mnt/MyWeb/class/cs5220-s17"  # Destination
+dest = "cslinux:/courses/cs5220/2017fa"  # Destination
 
 # === Check hash version
 

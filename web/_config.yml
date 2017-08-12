@@ -1,8 +1,8 @@
 title: David Bindel
 email: bindel@cornell.edu
 description: Academic home page for David Bindel
-baseurl: "/~bindel/class/cs5220-f17/"
-#baseurl: "/courses/CS5220/2017fa/"
+#baseurl: "/~bindel/class/cs5220-f17/"
+baseurl: "/courses/CS5220/2017fa/"
 url: "http://www.cs.cornell.edu/"
 
 encoding: utf-8
