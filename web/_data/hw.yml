@@ -1,5 +1,6 @@
 -
   desc: "HW0: Who are you?"
+  file: hw0.txt
   due: 2017-08-29
 -
   desc: "HW1: Building, queueing, profiling"

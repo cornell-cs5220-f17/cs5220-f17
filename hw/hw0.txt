@@ -1,0 +1,19 @@
+Please submit this text file (with your responses added) by Tues, Aug 29.
+
+1.  What do you prefer to be called?
+
+2.  Briefly describe your computing background and interests (and
+    anything else I should know about your background)
+
+3.  Why are you taking the class?
+
+4.  Indicate level of comfort with the following on a five point scale
+    (1 = I've never heard of it, 3 = I get by, 5 = I know a lot).
+
+  - Git:
+  - Unix shell:
+  - C programming:
+  - Python programming
+  - Computer architecture:
+  - Numerical methods:
+

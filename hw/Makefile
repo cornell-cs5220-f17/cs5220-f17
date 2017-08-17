@@ -1,7 +1,8 @@
-PDFS=
+HW_FILES=\
+	hw0.txt
 
 .PHONY: all clean distclean copy
-all: $(PDFS)
+all: $(HW_FILES)
 
 clean:
 
@@ -10,7 +11,7 @@ distclean: clean
 
 copy: $(PDFS)
 	mkdir -p ../web/hw
-#	cp $(PDFS) ../web/hw
+	cp $(HW_FILES) ../web/hw
 
 %.pdf: %.tex common.tex
 	pdflatex $<
