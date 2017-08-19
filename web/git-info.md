@@ -53,7 +53,7 @@ version of your code:
     repository where you keep your code, and that code *must* provide
     access to the CS 5220 SSH key -- otherwise we cannot read your
     code for grading!  Make sure to get the SSH link and not the 
-    HTTPS link.  
+    HTTPS link.
 
 If you would like the professor or the TA to be able to comment on
 your code independent of the submission process, you can always add us
