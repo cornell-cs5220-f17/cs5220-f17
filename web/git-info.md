@@ -13,10 +13,14 @@ options include:
  - [GitHub](https://github.com/)
  - [BitBucket](https://bitbucket.org/)
  - [GitLab](https://about.gitlab.com/)
- 
-If you choose to use a hosted Git service, you may choose to submit a
-tarball of your code via CMS as part of your submission.  However, we
-encourage you to use the following procedure to submit your code:
+
+We will use [CMS] to submit all class homeworks and projects this
+semester.  However, for homeworks that include code, you may choose
+to use [CMS] *either* to submit a tarball with the code files directly
+*or* to submit a pointer to a Git repository that contains your
+submission.  If you choose to do the latter, you should use the
+following process to make sure that we are able to access the correct
+version of your code:
 
 1.  Create a `submission` tag and make sure it is synchronized with
     the origin:
@@ -50,3 +54,5 @@ to your repository as regular collaborators with read-only access.  We
 are `dsb253` and `ehl59` on the Cornell GitHub, and `dbindel` and
 `ericlee0803` on GitHub and Bitbucket (and GitLab in the case of the
 professor).
+
+[CMS]: http://cms.csuglab.cornell.edu/web/guest/
