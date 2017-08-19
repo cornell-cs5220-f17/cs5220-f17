@@ -28,15 +28,21 @@ version of your code:
         git tag submission
         git push origin --tags
 
+    This marks the commit you want to tag as submission ready; we will 
+    not consider any commits past the submission tag. 
+    
 2.  Add the [CS 5220 SSH key](cs5220.pub) as a "deployment key" or
     "access key" with
-    permission read the repository.  Directions for how to do this
+    permission to read the repository (read-only should be the default).  Directions for how to do this
     under
     [GitHub](https://developer.github.com/v3/guides/managing-deploy-keys/),
     [Bitbucket](https://confluence.atlassian.com/bitbucket/use-access-keys-294486051.html),
     and
     [GitLab](https://support.deployhq.com/articles/repositories/adding-a-new-deployment-key-to-gitlab)
-    are avaoiable online.
+    are available online.
+    
+    Adding this key will give us read access, thereby allowing us to properly look at your repository. 
+    No key means no access on our side! 
 
 3.  In CMS, fill out the `repo.txt` file with the SSH link to the
     repository, e.g.
@@ -46,7 +52,8 @@ version of your code:
     The `repo.txt` file should contain *only* the name of the
     repository where you keep your code, and that code *must* provide
     access to the CS 5220 SSH key -- otherwise we cannot read your
-    code for grading!
+    code for grading!  Make sure to get the SSH link and not the 
+    HTTPS link.  
 
 If you would like the professor or the TA to be able to comment on
 your code independent of the submission process, you can always add us
