@@ -157,22 +157,18 @@ computation).
 In a \emph{strong scaling} study, one fixes the problem size $n$ and
 studies performance as a function of $p$. The usual measure of
 scalability is the \emph{speedup} of a parallel computation:
-
 \[
   S(p) = \frac{T_{\mathrm{serial}}}{T_{\mathrm{parallel}}(p)}
 \]
-
-where \[T_{\mathrm{serial}}\] is the performance of the \emph{best}
+where $T_{\mathrm{serial}}$ is the performance of the \emph{best}
 serial code available and $T_{\mathrm{parallel}}(p)$ is the time
 required with $p$ processors. The \emph{parallel efficiency} is the
 ratio of the speedup to the ideal linear speedup:
-
 \[
   \mbox{Efficiency}(p)
     = \frac{S(p)}{p}
     = \frac{T_{\mathrm{serial}}}{p T_{\mathrm{parallel}}(p)}.
 \]
-
 A \emph{speedup plot} of speedup versus $p$ is a standard graphic in
 most of the HPC literature, and is simultaneously one of the most useful
 and one of the most abused plots around. We return to some of the issues
@@ -183,11 +179,9 @@ because most real codes include some work that is difficult or
 impossible to parallelize. If $\alpha$ is the fraction of the serial
 work that cannot be parallelized, then \emph{Amdahl's law} tells us the
 best scaling we can hope for is
-
 \[
   S(p) \leq \frac{1}{\alpha+(1-\alpha)/p} \leq \frac{1}{\alpha}.
 \]
-
 For example, if 10\% of the work in a given computation is serial, we
 cannot hope for more than a $10 \times$ speedup no matter how many
 processors we use. In practice, this is usually a generous estimate:
@@ -208,21 +202,17 @@ ever-more parallelism to get faster answers to the same problems;
 rather, we want to use increased parallelism to solve bigger problems.
 In \emph{weak scaling} studies, we usually consider the \emph{scaled
 speedup}
-
 \[
 S(p) = \frac{T_{\mathrm{serial}}(n(p))}
             {T_{\mathrm{parallel}}(n(p),p)}
 \]
-
 where $n(p)$ is a family of problem sizes chosen so that the work per
 processor remains constant. For weak scaling studies, the analog of
 Amdahl's law is \emph{Gustafson's law}; if $a$ is the amount of serial
 work and $b$ is the parallelizable work, then
-
 \[
   S(p) \leq \frac{a + bP}{a + b} = p-\alpha(p-1)
 \]
-
 where $\alpha = a/(a+b)$ is the fraction of serial work.
 
 \paragraph{Takeaway}
