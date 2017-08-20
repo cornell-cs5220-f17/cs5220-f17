@@ -1,17 +1,24 @@
-LEC=
+LEC=\
+	pdf/2017-08-22-slides.pdf
 
 .PHONY: all copy
 all: $(LEC)
 
+pdf/%.pdf: notes/%.tex
+	xelatex -output-dir pdf $<
+	xelatex -output-dir pdf $<
+
+pdf/%.pdf: slides/%.tex
+	xelatex -output-dir pdf $<
+	xelatex -output-dir pdf $<
+
 clean:
-	rm -f *.aux *.log *.out
+	rm -f pdf/*.aux pdf/*.log pdf/*.out
+	rm -f pdf/*.nav pdf/*.snm pdf/*.toc 
 
 distclean: clean
-	rm -f *.pdf
+	rm -f pdf/*.pdf
 
 copy:
 	mkdir -p ../web/lec
-#	cp $(LEC) ../web/lec
-
-%.pdf: %.tex
-	util/build.sh $<
+	cp $(LEC) ../web/lec
