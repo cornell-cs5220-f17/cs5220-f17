@@ -35,7 +35,7 @@ layout: main
       {% if lec.break %}
       <td>{{ lec.break }}</td>
       {% else %}
-      <td>{% if lec.info %}{% if lec.slides %}<a href="lec/{{ lec.slides }}">{{ lec.info | markdownify }}</a>{% else %}{{ lec.info | markdownify }}{% endif %}{% if lec.notes %} [<a href="lec/{{ lec.notes }}">Notes</a>]{% endif %}{% if lec.travel %}<p>(Bindel away)</p>{% endif %}{% endif %}</td>
+      <td>{% if lec.info %}{% if lec.slides %}<a href="lec/{{ lec.slides }}">{{ lec.info }}</a>{% else %}{{ lec.info }}{% endif %}{% if lec.notes %} [<a href="lec/{{ lec.notes }}">Notes</a>]{% endif %}{% if lec.travel %}<p>(Bindel away)</p>{% endif %}{% endif %}</td>
       {% endif %}
       <td>
         {% if lec.hw %}<ul>
