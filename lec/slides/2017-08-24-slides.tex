@@ -1,0 +1,318 @@
+\documentclass{beamer}
+
+\input{commons}
+\hdr{2017-08-24}{Performance basics}
+
+\begin{document}
+
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Starting on the Soap Box}
+
+  \begin{itemize}
+  \item The goal is right enough, fast enough --- not flop/s.
+  \item Performance is not all that matters.
+    \begin{itemize}
+    \item Portability, readability, debuggability matter too!
+    \item Want to make intelligent trade-offs.
+    \end{itemize}
+  \item The road to good performance starts with a single core.
+    \begin{itemize}
+    \item Even single-core performance is hard.
+    \item Helps to build on well-engineered libraries.
+    \end{itemize}
+  \item Parallel efficiency is hard!
+    \begin{itemize}
+    \item $p$ processors $\neq$ speedup of $p$
+    \item Different algorithms parallelize differently.
+    \item Speed vs a naive, untuned serial algorithm is cheating!
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{The Cost of Computing}
+
+  Consider a simple serial code:
+  \begin{lstlisting}
+    // Accumulate C += A*B for n-by-n matrices
+    for (i = 0; i < n; ++i)
+      for (j = 0; j < n; ++j)
+        for (k = 0; k < n; ++k)
+          C[i+j*n] += A[i+k*n] * B[k+j*n];
+  \end{lstlisting}
+  Simplest model:
+  \begin{enumerate}
+  \item Dominant cost is $2n^3$ flops (adds and multiplies)
+  \item One flop per clock cycle
+  \item Expected time is
+    \[
+    \mbox{Time (s)} \approx
+    \frac{2n^3 \mbox{ flops}}
+         {2.4 \cdot 10^9 \mbox{ cycle/s} \times 1 \mbox{ flop/cycle}}
+    \]
+  \end{enumerate}
+  Problem: Model assumptions are wrong!
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{The Cost of Computing}
+
+  Dominant cost is $2n^3$ flops (adds and multiplies)?
+  \begin{itemize}
+  \item Dominant cost is often memory traffic!
+  \item Special case of a {\em communication cost}
+  \item Two pieces to cost of fetching data
+    \begin{description}
+    \item[Latency] Time from operation start to first result (s)
+    \item[Bandwidth] Rate at which data arrives (bytes/s)
+    \end{description}
+  \item Usually latency $\gg$ bandwidth$^{-1}$ $\gg$ time per flop
+  \item Latency to L3 cache is 10s of ns, DRAM is $3$--$4 \times$
+    slower
+  \item Partial solution: caches (to discuss next time)
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{The Cost of Computing}
+  
+  One flop per clock cycle? For cluster CPU cores:
+  \[
+  2 \frac{\mbox{flops}}{\mbox{FMA}} \times
+  4 \frac{\mbox{FMA}}{\mbox{vector FMA}} \times
+  2 \frac{\mbox{vector FMA}}{\mbox{cycle}} =
+  16 \frac{\mbox{flops}}{\mbox{cycle}}
+  \]
+  Theoretical peak (one core) is
+  \[
+  \mbox{Time (s)} \approx
+  \frac{2n^3 \mbox{ flops}}
+       {2.4 \cdot 10^9 \mbox{ cycle/s} \times 16 \mbox{ flop/cycle}}
+  \]
+
+  \vspace{5mm}
+  Makes DRAM latency look even worse!
+  DRAM latency $\sim 100$ ns:
+  \[
+  100 \mbox{ ns} \times
+  2.4 \frac{\mbox{cycle}}{\mbox{ns}} \times
+  16 \frac{\mbox{flops}}{\mbox{cycle}} =
+  3840 \mbox{ flops}
+  \]
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{The Cost of Computing}
+
+  Theoretical peak for matrix-matrix product (one core) is
+  \[
+    \mbox{Time (s)} \approx
+    \frac{2n^3 \mbox{ flops}}
+         {2.4 \cdot 10^9 \mbox{ cycle/s} \times 16 \mbox{ flop/cycle}}
+  \]
+  \begin{itemize}
+  \item But lose orders of magnitude if too many memory refs
+  \item And getting full vectorization is also not easy!
+  \item We'll talk more about (single-core) arch next week
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{The Cost of Computing}
+
+  What to take away from this performance modeling example?
+  \begin{itemize}
+  \item Start with a simple model
+    \begin{itemize}
+    \item Simplest model is asymptotic complexity (e.g.~$O(n^3)$ flops)
+    \item Counting {\em every} detail just complicates life
+    \item But we want enough detail to predict something
+    \end{itemize}
+  \item Watch out for hidden costs
+    \begin{itemize}
+    \item Flops are not the only cost!
+    \item Memory/communication costs are often killers
+    \item Integer computation may play a role as well
+    \end{itemize}
+  \item Account for instruction-level parallelism, too!
+  \end{itemize}
+  And we haven't even talked about more than one core yet!
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{The Cost of (Parallel) Computing}
+
+  Simple model:
+  \begin{itemize}
+  \item Serial task takes time $T$ (or $T(n)$)
+  \item Deploy $p$ processors
+  \item Parallel time is $T(n)/p$
+  \end{itemize}
+  ... and you should be suspicious by now!
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{The Cost of (Parallel) Computing}
+
+  Why is parallel time not $T/p$?
+  \begin{itemize}
+  \item {\bf Overheads:} Communication, synchronization, extra
+    computation and memory overheads
+  \item {\bf Intrinsically serial} work
+  \item {\bf Idle time} due to synchronization
+  \item {\bf Contention} for resources
+  \end{itemize}
+  We will talk about all of these in more detail.
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Quantifying Parallel Performance}
+  
+  \begin{itemize}
+  \item Starting point: good {\em serial} performance
+  \item Scaling study: compare parallel to serial time as a function of number of processors ($p$)
+    \begin{align*}
+      \mbox{Speedup} &= \frac{\mbox{Serial time}}{\mbox{Parallel time}} \\[2mm]
+      \mbox{Efficiency} &= \frac{\mbox{Speedup}}{p}
+    \end{align*}
+  \item
+    Ideally, speedup = $p$.  
+    Usually, speedup $ < p$.
+  \item Barriers to perfect speedup
+    \begin{itemize}
+    \item Serial work (Amdahl's law)
+    \item Parallel overheads (communication, synchronization)
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Amdahl's Law}
+
+  Parallel scaling study where some serial code remains:
+  \begin{align*}
+    p = & \mbox{ number of processors} \\
+    s = & \mbox{ fraction of work that is serial} \\
+    t_s = & \mbox{ serial time} \\
+    t_p = & \mbox{ parallel time} \geq s t_s + (1-s) t_s / p
+  \end{align*}
+
+  \vspace{2mm}
+  Amdahl's law:
+  \[
+    \mbox{Speedup} = 
+      \frac{t_s}{t_p} = \frac{1}{s + (1-s) / p} > \frac{1}{s}
+  \]
+
+  \vspace{5mm}
+  So $1\%$ serial work $\implies$ max speedup < $100 \times$,
+  regardless of $p$.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Strong and weak scaling}
+
+  Ahmdahl looks bad!  But two types of scaling studies:
+  \begin{description}
+  \item[Strong scaling] Fix problem size, vary $p$
+  \item[Weak scaling] Fix work per processor, vary $p$
+  \end{description}
+
+  \vspace{5mm}
+  For weak scaling, study {\em scaled speedup}
+  \[
+    S(p) =
+    \frac{T_{\mbox{serial}}(n(p))}{T_{\mbox{parallel}}(n(p), p)}
+  \]
+  Gustafson's Law:
+  \[
+    S(p) \leq p - \alpha(p-1)
+  \]
+  where $\alpha$ is the fraction of work that is serial.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Pleasing Parallelism}
+
+  A task is ``pleasingly parallel'' (aka ``embarrassingly parallel'')
+  if it requires very little coordination, for example:
+  \begin{itemize}
+  \item Monte Carlo computations with many independent trials
+  \item Big data computations mapping many data items independently
+  \end{itemize}
+  Result is ``high-throughput'' computing -- easy to get impressive
+  speedups!  Says nothing about hard-to-parallelize tasks.
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Dependencies}
+
+  Main pain point: {\em dependency} between computations
+  \begin{lstlisting}
+    a = f(x)
+    b = g(x)
+    c = h(a,b)
+  \end{lstlisting}
+  Compute {\tt a} and {\tt b} in parallel, but finish both
+  before {\tt c}! \\
+  Limits amount of parallel work available.
+
+  This is a true dependency (read-after-write).  Also have false
+  dependencies (write-after-read and write-after-write) that can be
+  dealt with more easily.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Granularity}
+
+  \begin{itemize}
+  \item Coordination is expensive --- including parallel start/stop!
+  \item Need to do enough work to amortize parallel costs
+  \item Not enough to have parallel work, need big chunks!
+  \item How big the chunks must be depends on the machine.
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Patterns and Benchmarks}
+
+  If your task is not pleasingly parallel, you ask:
+  \begin{itemize}
+  \item What is the best performance I reasonably expect?
+  \item How do I get that performance?
+  \end{itemize}
+  Look at examples somewhat like yours --
+  a {\em parallel pattern} -- and maybe seek an informative
+  benchmark.  Better yet: reduce to a previously
+  well-solved problem (build on tuned {\em kernels}).
+
+  \vspace{1cm}
+  NB: Easy to pick uninformative benchmarks and go astray.
+\end{frame}
+
+\end{document}
