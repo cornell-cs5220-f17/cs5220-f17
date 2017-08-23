@@ -155,6 +155,7 @@ the language and an example of how to write an effective manual.
   also look pretty good.
 - Cornell offers courses in C (CS 2022) and C++ (CS 2024).
 
+[kr-book]: https://www.amazon.com/exec/obidos/ASIN/0131103628/
 [c-cac]: https://cvw.cac.cornell.edu/CIntro/
 [cref-cac]: https://cvw.cac.cornell.edu/main/reference
 [mit-ocw-c]: http://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-087-practical-programming-in-c-january-iap-2010/lecture-notes/
