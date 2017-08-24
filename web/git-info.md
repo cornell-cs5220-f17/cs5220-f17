@@ -22,18 +22,18 @@ submission.  If you choose to do the latter, you should use the
 following process to make sure that we are able to access the correct
 version of your code:
 
-1.  Create a `submission` tag and make sure it is synchronized with
-    the origin:
-    
-        git tag submission
-        git push origin --tags
+1.  Change to your project directory on the cluster.
 
-    This marks the commit you want to tag as submission ready; we will 
-    not consider any commits past the submission tag. 
+2.  Run `submit-repo.sh [remote]` where `[remote]` denotes the name
+    of the remote repository you are using.  By default this will be
+    `origin`.  Once this has run, you will have created a `submission`
+    tag on the remote server, and a file `repo.txt` locally that you
+    should submit.
     
-2.  Add the [CS 5220 SSH key](cs5220.pub) as a "deployment key" or
-    "access key" with
-    permission to read the repository (read-only should be the default).  Directions for how to do this
+3.  The `submit-repo.sh` script will also print an SSH public key when
+    it finishes running; add the generated public key as a "deployment
+    key" or "access key" with permission to read the repository
+    (read-only should be the default).  Directions for how to do this
     under
     [GitHub](https://developer.github.com/v3/guides/managing-deploy-keys/),
     [Bitbucket](https://confluence.atlassian.com/bitbucket/use-access-keys-294486051.html),
@@ -41,19 +41,11 @@ version of your code:
     [GitLab](https://support.deployhq.com/articles/repositories/adding-a-new-deployment-key-to-gitlab)
     are available online.
     
-    Adding this key will give us read access, thereby allowing us to properly look at your repository. 
-    No key means no access on our side! 
+    Adding this key will give us read access, thereby allowing us to
+    properly look at your repository.  No key means no access on our
+    side!
 
-3.  In CMS, fill out the `repo.txt` file with the SSH link to the
-    repository, e.g.
-    
-        git@github.coecis.cornell.edu:dsb253/test_repository.git
-
-    The `repo.txt` file should contain *only* the name of the
-    repository where you keep your code, and that code *must* provide
-    access to the CS 5220 SSH key -- otherwise we cannot read your
-    code for grading!  Make sure to get the SSH link and not the 
-    HTTPS link.
+4.  In CMS, submit the generated `repo.txt` file as part of your submission.
 
 If you would like the professor or the TA to be able to comment on
 your code independent of the submission process, you can always add us
