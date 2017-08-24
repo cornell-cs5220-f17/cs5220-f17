@@ -3,7 +3,8 @@
   file: hw0.txt
   due: 2017-08-29
 -
-  desc: "HW1: Building, queueing, profiling"
+  desc: "HW1: Login, building, queueing, submitting"
+  url: https://github.com/cornell-cs5220-f17/cs5220-HW1
   due: 2017-09-05
 -
   desc: "P1: Matrix multiply"
