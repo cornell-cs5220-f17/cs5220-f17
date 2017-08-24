@@ -79,6 +79,7 @@
     slower
   \item Partial solution: caches (to discuss next time)
   \end{itemize}
+  See: \href{https://gist.github.com/jboner/2841832}{Latency numbers every programmer should know}
 \end{frame}
 
 
@@ -121,12 +122,22 @@
     \frac{2n^3 \mbox{ flops}}
          {2.4 \cdot 10^9 \mbox{ cycle/s} \times 16 \mbox{ flop/cycle}}
   \]
+  For 12 core node, theoretical peak is $12 \times$ faster.       
   \begin{itemize}
   \item But lose orders of magnitude if too many memory refs
   \item And getting full vectorization is also not easy!
   \item We'll talk more about (single-core) arch next week
   \end{itemize}
 
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{The Cost of Computing}
+
+  Sanity check: What is the theoretical peak of a Xeon Phi 5110P
+  accelerator? \\
+  \hfill \href{https://en.wikipedia.org/wiki/Xeon_Phi}{Wikipedia to the rescue!}
 \end{frame}
 
 
