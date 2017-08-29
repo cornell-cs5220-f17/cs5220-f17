@@ -1,0 +1,4 @@
+# Use the PDF backend for our plot (this overrides whatever your
+# default backend might be.
+
+backend : PDF

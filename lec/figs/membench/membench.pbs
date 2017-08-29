@@ -1,0 +1,7 @@
+#!/bin/sh
+
+#PBS -N membench
+#PBS -j oe
+
+cd ~/membench
+./membench timings.csv
