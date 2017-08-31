@@ -1,0 +1,921 @@
+\documentclass{beamer}
+
+\input{commons}
+\hdr{2017-08-31}{Optimization basics}
+
+\begin{document}
+
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Reminder: Modern processors}
+
+  \begin{itemize}
+  \item Modern CPUs are
+    \begin{itemize}
+    \item Wide: start / retire multiple instructions per cycle
+    \item Pipelined: overlap instruction executions
+    \item Out-of-order: dynamically schedule instructions
+    \end{itemize}
+  \item Lots of opportunities for instruction-level parallelism (ILP)
+  \item Complicated!  Want the compiler to handle the details
+  \item Implication: we should give the compiler
+    \begin{itemize}
+    \item Good instruction mixes
+    \item Independent operations
+    \item Vectorizable operations
+    \end{itemize}
+  \end{itemize}
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Reminder: Memory systems}
+
+  \begin{itemize}
+  \item Memory access are expensive!
+  \item Flop time $\ll$ bandwidth$^{-1}$ $\ll$ latency
+  \item Caches provide intermediate cost/capacity points
+  \item Cache benefits from
+    \begin{itemize}
+    \item Spatial locality (regular local access)
+    \item Temporal locality (small working sets)
+    \end{itemize}
+  \end{itemize}
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Goal: (Trans)portable performance}
+
+  \begin{itemize}
+  \item Attention to detail has orders-of-magnitude impact
+  \item Different systems = different micro-architectures, caches
+  \item Want (trans)portable performance across HW
+  \item Need {\em principles} for high-perf code along with
+    tricks
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Basic principles}
+
+  \begin{itemize}
+  \item Think before you write
+  \item Time before you tune
+  \item Stand on the shoulders of giants
+  \item Help your tools help you
+  \item Tune your data structures
+  \end{itemize}
+  
+\end{frame}
+
+
+% =====================================================
+
+
+\begin{frame}
+  \frametitle{Think before you write}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Premature optimization}
+
+  \begin{quote}
+  We should forget about small efficiencies, say about 97\% of the
+  time: premature optimization is the root of all evil. \\
+  \hfill -- Don Knuth
+  \end{quote}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Premature optimization}
+
+  Wrong reading: ``Performance doesn't matter''
+  \begin{quote}
+  We should forget about small efficiencies, say about 97\% of the
+  time: premature {\bf optimization is the root of all evil}. \\
+  \hfill -- Don Knuth
+  \end{quote}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Premature optimization}
+
+  What he actually said (with my emphasis)
+  \begin{quote}
+  We should forget about {\bf small} efficiencies, say {\bf about 97\%} of the
+  time: {\bf premature} optimization is the root of all evil. \\
+  \hfill -- Don Knuth
+  \end{quote}
+
+  \begin{itemize}
+  \item Don't forget the big efficiencies!
+  \item Don't forget the 3\%!
+  \item Your code is not premature forever!
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Don't sweat the small stuff}
+
+  \begin{itemize}
+  \item Speed-up from tuning $\epsilon$ of code $< (1-\epsilon)^{-1}
+    \approx 1 + \epsilon$
+  \item OK to write high-level stuff in Matlab or Python
+  \item OK if configuration file reader is un-tuned
+  \item OK if $O(n^2)$ prelude to $O(n^3)$ algorithm is not hyper-tuned?
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Lay-of-the-land thinking}
+
+  \begin{lstlisting}
+    for (i = 0; i < n; ++i)
+      for (j = 0; j < n; ++j)
+        for (k = 0; k < n; ++k)
+          C[i+j*n] += A[i+k*n] * B[i+k*n];
+  \end{lstlisting}
+  \begin{itemize}
+  \item What are the ``big computations'' in my code?
+  \item What are the natural algorithmic variants?
+    \begin{itemize}
+    \item Vary loop orders?  Different interpretations!
+    \item Lower complexity algorithm (Strassen?)
+    \end{itemize}
+  \item Should I rule out some options in advance?
+  \item How can I code so it is easy to experiment?
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{How big is $n$?}
+
+  Typical analysis: time is $O(f(n))$
+  \begin{itemize}
+  \item Meaning: $\exists C, N : \forall n \geq N, T_n \leq C f(n)$.
+  \item Says {\em nothing} about constant factors: $O(10 n) = O(n)$
+  \item Ignores lower order term: $O(n^3 + 1000 n^2) = O(n^3)$
+  \item Behavior at small $n$ may not match behavior at large $n$!
+  \end{itemize}
+  Beware asymptotic complexity arguments about small-$n$ codes!
+  
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Avoid work}
+
+\begin{lstlisting}
+bool any_negative1(int* x, int n)
+{
+  bool result = false;
+  for (int i = 0; i < n; ++i)
+    result = (result || x[i] < 0);
+  return result;
+}
+
+bool any_negative2(int* x, int n)
+{
+  for (int i = 0; i < n; ++i)
+    if (x[i] < 0)
+      return false;
+  return true;
+}
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Be cheap}
+
+  Fast enough, right enough $\implies$ \\
+  \hfill Approximate when you can get away with it.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Do more with less (data)}
+
+  Want lots of work relative to data loads:
+  \begin{itemize}
+  \item Keep data compact to fit in cache
+  \item Use short data types for better vectorization
+  \item But be aware of tradeoffs!
+    \begin{itemize}
+    \item For integers: may want 64-bit ints sometimes!
+    \item For floating-point: will discuss in detail in other lectures
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Remember the I/O!}
+
+  Example: Explicit PDE time stepper on $256^2$ mesh
+  \begin{itemize}
+  \item 0.25 MB per frame (three fit in L3 cache)
+  \item Constant work per element (a few flops)
+  \item Time to write to disk $\approx$ 5 ms
+  \end{itemize}
+  If I write once every 100 frames, how much time is I/O?
+\end{frame}
+
+
+% =====================================================
+
+
+\begin{frame}
+  \frametitle{Time before you tune}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Hot spots and bottlenecks}
+
+  \begin{itemize}
+  \item Often a little bit of code takes most of the time
+  \item Usually called a ``hot spot'' or bottleneck
+  \item Goal: Find and eliminate
+    \begin{itemize}
+    \item Cute coinage: ``de-slugging''
+    \end{itemize}
+  \end{itemize}
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Practical timing}
+
+  Need to worry about:
+  \begin{itemize}
+  \item System timer resolutions
+  \item Wall-clock time vs CPU time
+  \item Size of data collected vs how informative it is
+  \item Cross-interference with other tasks
+  \item Cache warm-start on repeated timings
+  \item Overlooked issues from too-small timings
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Manual instrumentation}
+
+  Basic picture:
+  \begin{itemize}
+  \item Identify stretch of code to be timed
+  \item Run it several times with ``characteristic'' data
+  \item Accumulate the total time spent
+  \end{itemize}
+  Caveats: Effects from repetition, ``characteristic'' data
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Manual instrumentation}
+
+  \begin{itemize}
+  \item Hard to get {\em portable} high-resolution wall-clock time!
+  \item Solution: {\tt omp\_get\_wtime()}
+  \item Requires OpenMP support (still not CLang)
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Types of profiling tools}
+
+  \begin{itemize}
+  \item Sampling vs instrumenting
+    \begin{itemize}
+    \item Sampling: Interrupt every $t_{\mathrm{profile}}$ cycles
+    \item Instrumenting: Rewrite code to insert timers
+    \item Instrument at binary or source level
+    \end{itemize}
+  \item Function level or line-by-line
+    \begin{itemize}
+    \item Function: Inlining can cause mis-attribution
+    \item Line-by-line: Usually requires debugging symbols ({\tt -g})
+    \end{itemize}
+  \item Context information?
+    \begin{itemize}
+    \item Distinguish full call stack or not?
+    \end{itemize}
+  \item Time full run, or just part?
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Hardware counters}
+
+  \begin{itemize}
+  \item Counters track cache misses, instruction counts, etc
+  \item Present on most modern chips
+  \item May require significant permissions to access...
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Automated analysis tools}
+
+  \begin{itemize}
+  \item Examples: MAQAO and IACA
+  \item Symbolic execution of {\em model} of a code segment
+  \item Usually only practical for short segments
+  \item But can give detailed feedback on (assembly) quality
+  \end{itemize}
+\end{frame}
+
+
+% =====================================================
+
+
+\begin{frame}
+  \frametitle{Shoulders of giants}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{What makes a good kernel?}
+
+  Computational kernels are
+  \begin{itemize}
+  \item Small and simple to describe
+  \item General building blocks (amortize tuning work)
+  \item Ideally high arithmetic intensity
+    \begin{itemize}
+    \item Arithmetic intensity = flops/byte
+    \item Amortizes memory costs
+    \end{itemize}
+  \end{itemize}
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Case study: BLAS}
+
+  Basic Linear Algebra Subroutines
+  \begin{itemize}
+  \item Level 1: $O(n)$ work on $O(n)$ data
+  \item Level 2: $O(n^2)$ work on $O(n^2)$ data
+  \item Level 3: $O(n^3)$ work on $O(n^2)$ data
+  \end{itemize}
+  Level 3 BLAS are key for high-perf transportable LA.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Other common kernels}
+
+  \begin{itemize}
+  \item Apply sparse matrix (or sparse matrix powers)
+  \item Compute an FFT
+  \item Sort a list
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Kernel trade-offs}
+
+  \begin{itemize}
+  \item Critical to get {\em properly tuned} kernels
+    \begin{itemize}
+    \item Kernel {\em interface} is consistent across HW types
+    \item Kernel {\em implementation} varies according to arch details
+    \end{itemize}
+  \item General kernels {\em may} leave performance on the table
+    \begin{itemize}
+    \item Ex: General matrix-matrix multiply for structured matrices
+    \end{itemize}
+  \item Overheads may be an issue for small $n$ cases
+    \begin{itemize}
+    \item Ex: Usefulness of batched BLAS extensions
+    \end{itemize}
+  \item But: Ideally, someone else writes the kernel!
+    \begin{itemize}
+    \item Or it may be automatically tuned
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+% =====================================================
+
+
+\begin{frame}
+  \frametitle{Help your tools help you}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{What can your compiler do for you?}
+
+  In decreasing order of effectiveness:
+  \begin{itemize}
+  \item Local optimization
+    \begin{itemize}
+    \item Especially restricted to a ``basic block''
+    \item More generally, in ``simple'' functions
+    \end{itemize}
+  \item Loop optimizations
+  \item Global (cross-function) optimizations
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Local optimizations}
+
+  \begin{itemize}
+  \item Register allocation: compiler > human
+  \item Instruction scheduling: compiler > human
+  \item Branch joins and jump elim: compiler > human?
+  \item Constant folding and propogation: humans OK
+  \item Common subexpression elimination: humans OK
+  \item Algebraic reductions: humans definitely help
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Loop optimizations}
+
+  {\em Mostly} leave these to modern compilers
+  \begin{itemize}
+  \item Loop invariant code motion
+  \item Loop unrolling
+  \item Loop fusion
+  \item Software pipelining
+  \item Vectorization
+  \item Induction variable substitution
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Obstacles for the compiler}
+
+  \begin{itemize}
+  \item Long dependency chains
+  \item Excessive branching
+  \item Pointer aliasing
+  \item Complex loop logic
+  \item Cross-module optimization
+  \item Function pointers and virtual functions
+  \item Unexpected FP costs
+  \item Missed algebraic reductions
+  \item Lack of instruction diversity
+  \end{itemize}
+  Let's look at a few...
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Ex: Long dependency chains}
+
+  Sometimes these can be decoupled (e.g.~reduction loops)
+  \begin{lstlisting}
+  // Version 0
+  float s = 0;
+  for (int i = 0; i < n; ++i)
+    s += x[i];
+  \end{lstlisting}
+  Apparent linear dependency chain.  Compilers might handle this, but
+  let's try ourselves...
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Ex: Long dependency chains}
+
+  Key: Break up chains to expose parallel opportunities
+  \begin{lstlisting}
+  // Version 1
+  float s[4] = {0, 0, 0, 0};
+  int i;
+
+  // Sum start of list in four independent sub-sums
+  for (i = 0; i < n-3; i += 4)
+    for (int j = 0; j < 4; ++j)
+    s[j] += x[i+j];
+
+  // Combine sub-sums and handle trailing elements
+  float s = (s[0]+s[1]) + (s[2]+s[3]);
+  for (; i < n; ++i)
+    s += x[i];
+\end{lstlisting}  
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Ex: Pointer aliasing}
+
+Why can this not vectorize easily?
+\begin{lstlisting}
+void add_vecs(int n, double* result, double* a, double* b)
+{
+  for (int i = 0; i < n; ++i)
+    result[i] = a[i] + b[i];
+}
+\end{lstlisting}
+Q: What if {\tt result} overlaps {\tt a} or {\tt b}?
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Ex: Pointer aliasing}
+
+  C99: Use {\tt restrict} keyword
+  \begin{lstlisting}
+  void add_vecs(int n, double* restrict result,
+                double* restrict a, double* restrict b);
+  \end{lstlisting}
+  Implicit promise: these point to different things in memory.
+
+  \vspace{5mm}
+  Fortran forbids aliasing --- part of why naive Fortran speed beats
+  naive C speed!
+\end{frame}
+
+% List of obstacles and some solutions
+
+
+\begin{frame}[fragile]
+  \frametitle{Ex: ``Black box'' function calls}
+
+Compiler must assume arbitrary wackiness from ``black box'' function calls
+\begin{lstlisting}
+double foo(double* restrict x)
+{
+  double y = *x;  // Load x once
+  bar();    // Assume bar is a 'black box' fn
+  y += *x;  // Must reload x
+  return y;
+}
+\end{lstlisting}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Ex: Floating point issues}
+
+  Several possible optimizations available:
+  \begin{itemize}
+  \item Use different precisions
+  \item Use more/less accurate special function routines
+  \item Underflow is flush-to-zero or gradual
+  \end{itemize}
+  Problem: This changes semantics!
+  \begin{itemize}
+  \item A daring compiler will pretend floats are reals and hope
+  \item This will break some of my codes!
+  \item Human intervention is indicated
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Optimization flags}
+
+  \begin{itemize}
+  \item {\tt -O[0123]} (no optimization -- aggressive optimization)
+    \begin{itemize}
+    \item {\tt -O2} is usually the default
+    \item {\tt -O3} is useful, but might break FP codes (for example)
+    \end{itemize}
+  \item Architecture targets
+    \begin{itemize}
+    \item Usually a ``native'' mode targets current architecture
+    \item Not always the right choice (e.g.~consider Totient head/compute)
+    \end{itemize}
+  \item Specialized optimization flags
+    \begin{itemize}
+    \item Turn on/off specific optimization features
+    \item Often the basic {\tt -Ox} has reasonable defaults
+    \end{itemize}
+  \end{itemize}
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Auto-vectorization and compiler reports}
+
+  \begin{itemize}
+  \item Good compilers try to vectorize for you
+    \begin{itemize}
+    \item Intel is pretty good at this
+    \item GCC / CLang are OK, not as strong
+    \end{itemize}
+  \item Can get reports about what prevents vectorization
+    \begin{itemize}
+    \item Not necessarily by default!
+    \item Helps a lot for tuning
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Profile-guided optimization}
+
+  Basic workflow:
+  \begin{itemize}
+  \item Compile code with optimizations
+  \item Run in a profiler
+  \item Compile again, provide profiler results
+  \end{itemize}
+  Helps compiler optimize branches based on observations.
+\end{frame}
+
+
+% =====================================================
+
+
+\begin{frame}
+  \frametitle{Data layout matters}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{``Speed-of-light'' analysis}
+
+  For compulsory misses to load cache:
+  \[
+  T_{\mbox{data}} \mbox{ (s)}
+  \quad \geq \quad
+  \frac{\mbox{data required (bytes)}}
+       {\mbox{peak BW (bytes/s)}}
+  \]
+  Possible optimizations:
+  \begin{itemize}
+  \item Shrink working sets to fit in cache (pay this once)
+  \item Use simple unit-stride access patterns
+  \end{itemize}
+  Reality is generally more complicated...  
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{When and how to allocate}
+
+Why is this an $O(n^2)$ loop?
+\begin{lstlisting}[language=Matlab]
+  x = [];
+  for i = 1:n
+    x(i) = i;
+  end
+\end{lstlisting}  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{When and how to allocate}
+
+  \begin{itemize}
+  \item Access is not the only cost!
+    \begin{itemize}
+    \item Allocation / de-allocation also costs something
+    \item So does garbage collection (where supported)
+    \item Beware hidden allocation costs (e.g. on resize)
+    \item Often bites naive library users
+    \end{itemize}
+  \item Two thoughts to consider
+    \begin{itemize}
+    \item Pre-allocation (avoid repeated alloc/free)
+    \item Lazy allocation (if alloc will often not be needed)
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Storage layout}
+
+  Desiderata:
+  \begin{itemize}
+  \item Compact (fit lots into cache)
+  \item Traverse with simple access patterns
+  \item Avoids pointer chasing
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Multi-dimensional arrays}
+
+  Two standard formats:
+  \begin{itemize}
+  \item Col-major (Fortran): Each column stored consecutively
+  \item Row-major (C/C++): Each row stored consecutively
+  \end{itemize}
+  Ideally, traverse arrays with unit stride!  Layout affects choice.
+
+  \vspace{1cm}
+  More sophisticated multi-dim array layouts may be useful...
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Blocking / tiling}
+
+  Classic example: Matrix multiply
+  \begin{itemize}
+  \item Load $b \times b$ block of $A$
+  \item Load $b \times b$ block of $B$
+  \item Compute product of blocks
+  \item Accumulate into $b \times b$ block of $C$
+  \end{itemize}
+  Have $O(b^3)$ work for $O(b^2)$ memory references!
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Data alignment and vectorization}
+
+  \begin{itemize}
+  \item Vector load/stores faster if {\em aligned} (start at memory
+    addresses that are multiples of 64 or 256)
+  \item Can ask for aligned blocks of memory from allocator
+  \item Then want aligned offsets into aligned blocks
+  \item Have to help compiler recognize aligned pointers!
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Data alignment and cache contention}
+
+  Issue: What if strided access causes conflict misses?
+  \begin{itemize}
+  \item Example: Walk across row of col-major matrix
+  \item Example: Parallel arrays of large-power-of-2 size
+  \end{itemize}
+  Not the most common problem, but one to watch for.
+  
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Structure layouts}
+
+  \begin{itemize}
+  \item Want $b$-byte type to start on $b$-byte memory boundary.
+  \item Compiler may pad structures to enforce this.
+  \item Advice: arrange structure fields in decreasing size order.
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{SoA vs AoS}
+
+\begin{lstlisting}
+// Struct of Arrays (parallel arrays)
+typedef struct {
+  double* x;
+  double* y;
+} aos_points_t;
+
+// Array of Structs
+typedef struct {
+  double x;
+  double y;
+} point_t;
+typedef point_t* soa_points_t;
+\end{lstlisting}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{SoA vs AoS}
+
+  \begin{itemize}
+  \item SoA: Structure of Arrays
+    \begin{itemize}
+    \item Friendly to vectorization
+    \item Poor locality to access all of one item
+    \item Awkward for lots of libraries and programs
+    \end{itemize}
+  \item AoS: Array of Structs
+    \begin{itemize}
+    \item Naturally supported default
+    \item Not very SIMD-friendly
+    \end{itemize}
+  \item Possible to combine the two...
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Copy optimizations}
+
+  Copy between formats to accelerate computations, e.g.
+  \begin{itemize}
+  \item Copy piece of AoS to SoA format
+  \item Perform vector operations on SoA data
+  \item Copy back out
+  \end{itemize}
+  Performance gains > copy costs?  Plays great with tiling!
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{For the control freak}
+
+  Can get (some) programmer control over
+  \begin{itemize}
+  \item Pre-fetching
+  \item Uncached memory stores
+  \end{itemize}
+  But usually best left to compiler / HW.
+  
+\end{frame}
+
+
+% =====================================================
+
+
+\begin{frame}
+  \frametitle{Matrix multiplication}
+
+  \begin{itemize}
+  \item This was a lot of stuff in a short time!
+  \item Best way to digest it is try some things out
+  \item First project: tune matrix-matrix multiply
+  \item Due Sep 12 (about two weeks)
+    \begin{itemize}
+    \item Gives enough time to play with some ideas
+    \item Not enough time for obsessive tuning to ruin lives
+    \end{itemize}
+  \item We encourage partners -- try to cross disciplines!
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Recommended strategy}
+
+  \begin{itemize}
+  \item Start with a small ``kernel'' multiply
+    \begin{itemize}
+    \item Maybe odd sizes, strange layouts -- just go fast!
+    \item Intel compiler may do fine with simple-looking code
+    \item Deserves its own timing rig
+    \end{itemize}
+  \item Use blocking to build up larger multiplies
+  \item Will have to do something reasonable with edge blocks...
+  \end{itemize}
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{References}
+
+  \begin{itemize}
+  \item My
+    \href{http://www.cs.cornell.edu/~bindel/class/cs5220-f11/notes/serial-tuning.pdf}{serial
+      tuning notes}.
+  \item Ulrich Drepper,
+    \href{http://people.redhat.com/drepper/cpumemory.pdf}{\em What
+      Every Programmer Should Know About Memory}
+  \item \href{http://www.intel.com/Assets/PDF/manual/248966.pdf}{Intel
+    Optimization Manual}
+  \item Hager and Wellein,
+    \href{https://www.crcpress.com/Introduction-to-High-Performance-Computing-for-Scientists-and-Engineers/Hager-Wellein/p/book/9781439811924}{\em
+      Intro
+      to HPC for Scientists and Engineers}
+  \item Goedecker and Hoisie, \href{http://epubs.siam.org/doi/book/10.1137/1.9780898718218}{\em Performance Optimization of
+    Numerically Intensive Codes}
+  \item Agner Fog's \href{http://www.agner.org/optimize/}{Software
+    Optimization Manuals}
+  \end{itemize}
+\end{frame}
+
+
+\end{document}
