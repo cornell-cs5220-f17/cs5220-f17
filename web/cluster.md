@@ -13,7 +13,7 @@ refrain from using it to run computationally intensive jobs.
 Unless otherwise stated, homework and projects should be tested and
 timed on these machines.
 
-The cluster runs [RedHat Enterprise Linux 6.9 (Santiago)](rhel67).
+The cluster runs [RedHat Enterprise Linux 6.9 (Santiago)](rhel69).
 The system base compilers are a bit old, though we have installed the
 [Developer Toolset][devtools] with more recent versions of the
 compiler as well as some utilities.  For most of the work in this
@@ -192,3 +192,16 @@ to get the appropriate compile and link information, e.g.
 [openblas]: http://www.openblas.net/
 [lapack]: http://www.netlib.org/lapack/
 [pkg-config]: https://en.wikipedia.org/wiki/Pkg-config
+
+### Anaconda
+
+[Anaconda](https://www.anaconda.com/download/) is a distribution for
+Python, and also a packaging mechanism for various other software
+tools.  We strongly recommend you load the associated module if you
+are going to use Python for anything (e.g. the plotter)
+
+- `anaconda/4.4.0`: [Anaconda Python](https://www.anaconda.com/download/)
+
+In addition to giving you a fully-loaded Python distribution, loading
+the `anaconda` module will give you access to the CLang compiler and
+the Julia programming environment.
