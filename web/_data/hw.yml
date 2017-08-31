@@ -8,6 +8,7 @@
   due: 2017-09-05
 -
   desc: "P1: Matrix multiply"
+  url: https://github.com/cornell-cs5220-f17/matmul-project
   due: 2017-09-12
 -
   desc: "HW2: Getting started with MPI"
