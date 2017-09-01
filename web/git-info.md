@@ -28,7 +28,7 @@ version of your code:
     of the remote repository you are using.  By default this will be
     `origin`.  Once this has run, you will have created a `submission`
     tag on the remote server, and a file `repo.txt` locally that you
-    should submit.
+    should submit. `submit-repo.sh` can be found [here](https://github.com/cornell-cs5220-f17/cs5220-f17/tree/master/util). 
     
 3.  The `submit-repo.sh` script will also print an SSH public key when
     it finishes running; add the generated public key as a "deployment
@@ -46,6 +46,7 @@ version of your code:
     side!
 
 4.  In CMS, submit the generated `repo.txt` file as part of your submission.
+
 
 If you would like the professor or the TA to be able to comment on
 your code independent of the submission process, you can always add us
