@@ -1,0 +1,432 @@
+\documentclass{beamer}
+
+\input{commons}
+
+\hdr{2017-09-07}{Parallel machines and models}
+
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Why clusters?}
+
+  \begin{itemize}
+  \item Clusters of SMPs are everywhere
+    \begin{itemize}
+    \item Commodity hardware -- economics!  Even supercomputers
+      now use commodity CPUs (+ specialized interconnects).
+    \item Relatively simple to set up and administer (?)
+    \end{itemize}
+  \item But still costs room, power, ...
+  \item Economy of scale $\implies$ clouds?
+    \begin{itemize}
+    \item Amazon and MS now have HPC instances (GCP, too)
+    \item Microsoft has Infiniband connected instances
+    \item Several bare-metal HPC/cloud providers
+    \item Lots of interesting challenges here
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Cluster structure}
+
+  Consider:
+  \begin{itemize}
+  \item Each core has vector parallelism
+  \item Each chip has six cores, shares memory with others
+  \item Each box has two chips, shares memory
+  \item Each box has two Xeon Phi accelerators
+  \item Eight instructional nodes, communicate via Ethernet
+  \end{itemize}
+  How did we get here? Why this type of structure?  And how does the
+  programming model match the hardware?
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Parallel computer hardware}
+  
+  Physical machine has {\em processors}, {\em memory}, {\em interconnect}.
+  \begin{itemize}
+  \item Where is memory physically?
+  \item Is it attached to processors?
+  \item What is the network connectivity?
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Parallel programming model}
+  
+  Programming {\em model} through languages, libraries.
+  \begin{itemize}
+  \item
+    Control
+    \begin{itemize}
+      \item How is parallelism created?
+      \item What ordering is there between operations?
+    \end{itemize}
+  \item
+    Data
+    \begin{itemize}
+      \item What data is private or shared?
+      \item How is data logically shared or communicated?
+    \end{itemize}
+  \item
+    Synchronization
+    \begin{itemize}
+      \item What operations are used to coordinate?
+      \item What operations are atomic?
+    \end{itemize}
+  \item
+    Cost: how do we reason about each of above?
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Simple example}
+
+  Consider dot product of $x$ and $y$.
+  \begin{itemize}
+    \item Where do arrays $x$ and $y$ live?  One CPU?  Partitioned?
+    \item Who does what work?
+    \item How do we combine to get a single final result?
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Shared memory programming model}
+  
+  Program consists of {\em threads} of control.
+  \begin{itemize}
+  \item Can be created dynamically
+  \item Each has private variables (e.g.~local)
+  \item Each has shared variables (e.g.~heap)
+  \item Communication through shared variables
+  \item Coordinate by synchronizing on variables
+  \item Examples: OpenMP, pthreads
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Shared memory dot product}
+  
+  Dot product of two $n$ vectors on $p \ll n$ processors:
+  \begin{enumerate}
+  \item Each CPU evaluates partial sum ($n/p$ elements, local)
+  \item Everyone tallies partial sums
+  \end{enumerate}
+  Can we go home now?
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Race condition}
+
+  A {\em race condition}:
+  \begin{itemize}
+  \item Two threads access same variable, at least one write.
+  \item Access are concurrent -- no ordering guarantees
+    \begin{itemize}
+    \item Could happen simultaneously!
+    \end{itemize}
+  \end{itemize}
+  Need synchronization via lock or barrier.
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Race to the dot}
+
+  Consider {\tt S += partial\_sum} on 2 CPU:
+  \begin{itemize}
+  \item P1: Load {\tt S}
+  \item P1: Add {\tt partial\_sum}
+  \item P2: Load {\tt S}
+  \item P1: Store new {\tt S}
+  \item P2: Add {\tt partial\_sum}
+  \item P2: Store new {\tt S}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Shared memory dot with locks}
+
+  Solution: consider {\tt S += partial\_sum} a {\em critical section}
+  \begin{itemize}
+  \item Only one CPU at a time allowed in critical section
+  \item Can violate invariants locally
+  \item Enforce via a lock or mutex (mutual exclusion variable)
+  \end{itemize}
+  
+  \vspace{5mm}
+  Dot product with mutex:
+  \begin{enumerate}
+  \item Create global mutex {\tt l}
+  \item Compute {\tt partial\_sum}
+  \item Lock {\tt l}
+  \item {S += partial\_sum}
+  \item Unlock {\tt l}
+  \end{enumerate}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Shared memory with barriers}
+  
+  \begin{itemize}
+  \item Lots of sci codes have phases (e.g. time steps)
+  \item Communication only needed at end of phases
+  \item Idea: synchronize on end of phase with {\em barrier}
+    \begin{itemize}
+    \item More restrictive (less efficient?) than small locks
+    \item But easier to think through!  (e.g. less chance of deadlocks)
+    \end{itemize}
+  \item Sometimes called {\em bulk synchronous programming}
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Shared memory machine model}
+
+  \begin{itemize}
+  \item Processors and memories talk through a bus
+  \item Symmetric Multiprocessor (SMP)
+  \item Hard to scale to lots of processors (think $\leq 32$)
+    \begin{itemize}
+      \item Bus becomes bottleneck
+      \item {\em Cache coherence} is a pain
+    \end{itemize}
+  \item Example: Six-core chips on cluster
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Multithreaded processor machine}
+  
+  \begin{itemize}
+  \item Maybe threads > processors!
+  \item Idea: Switch threads on long latency ops.
+  \item Called {\em hyperthreading} by Intel
+  \item Cray MTA was an extreme example
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Distributed shared memory}
+ 
+  \begin{itemize}
+  \item Non-Uniform Memory Access (NUMA)
+  \item Can {\em logically} share memory while {\em physically} distributing
+  \item Any processor can access any address
+  \item Cache coherence is still a pain
+  \item Example: SGI Origin (or multiprocessor nodes on cluster)
+  \item Many-core accelerators tend to be NUMA as well
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Message-passing programming model}
+
+  \begin{itemize}
+  \item Collection of named processes
+  \item Data is {\em partitioned}
+  \item Communication by send/receive of explicit message
+  \item Lingua franca: MPI (Message Passing Interface)
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Message passing dot product: v1}
+
+  \begin{minipage}{0.45\textwidth}
+    Processor 1:
+    \begin{enumerate}
+    \item Partial sum s1
+    \item Send s1 to P2
+    \item Receive s2 from P2
+    \item s = s1 + s2
+    \end{enumerate}
+  \end{minipage}
+  \begin{minipage}{0.45\textwidth}
+    Processor 2:
+    \begin{enumerate}
+    \item Partial sum s2
+    \item Send s2 to P1
+    \item Receive s1 from P1
+    \item s = s1 + s2
+    \end{enumerate}
+  \end{minipage}
+
+  \vspace{1cm}
+  What could go wrong?  Think of phones vs letters...
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Message passing dot product: v1}
+
+  \begin{minipage}{0.45\textwidth}
+    Processor 1:
+    \begin{enumerate}
+    \item Partial sum s1
+    \item Send s1 to P2
+    \item Receive s2 from P2
+    \item s = s1 + s2
+    \end{enumerate}
+  \end{minipage}
+  \begin{minipage}{0.45\textwidth}
+    Processor 2:
+    \begin{enumerate}
+    \item Partial sum s2
+    \item Receive s1 from P1
+    \item Send s2 to P1
+    \item s = s1 + s2
+    \end{enumerate}
+  \end{minipage}
+
+  \vspace{1cm}
+  Better, but what if more than two processors?
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{MPI: the de facto standard}
+
+  \begin{itemize}
+  \item Pro: {\em Portability}
+  \item Con: least-common-denominator for mid 80s
+  \end{itemize}
+  The ``assembly language'' (or C?) of parallelism... \\
+  \hspace{5mm} but, alas, assembly language can be high performance.
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Distributed memory machines}
+  
+  \begin{itemize}
+  \item Each node has local memory
+    \begin{itemize}
+    \item ... and no direct access to memory on other nodes
+    \end{itemize}
+  \item Nodes communicate via network interface
+  \item Example: our cluster!
+  \item Other examples: IBM SP, Cray T3E
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{The story so far}
+
+  \begin{itemize}
+  \item Even {\em serial} performance is a complicated function of
+        the underlying architecture and memory system.  We need to
+        understand these effects in order to design data structures
+        and algorithms that are fast on modern machines.  Good
+        serial performance is the basis for good parallel performance.
+  \item {\em Parallel} performance is additionally complicated by
+        communication and synchronization overheads, and by how
+        much parallel work is available.  If a small fraction of the
+        work is completely serial, Amdahl's law bounds the speedup,
+        independent of the number of processors.
+  \item We have discussed serial architecture and some of the basics
+        of parallel machine models and programming models.
+  \item Now we want to describe how to think about the shape of
+        parallel algorithms for some scientific applications.
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Reminder: what do we want?}
+
+  \begin{itemize}
+  \item High-level: solve big problems fast
+  \item Start with good {\em serial} performance
+  \item Given $p$ processors, could then ask for
+    \begin{itemize}
+    \item Good {\em speedup}: $p^{-1}$ times serial time
+    \item Good {\em scaled speedup}: $p$ times the work in same time
+    \end{itemize}
+  \item Easiest to get good speedup from cruddy serial code!
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Parallelism and locality}
+
+  \begin{itemize}
+  \item Real world exhibits {\em parallelism} and {\em locality}
+    \begin{itemize}
+    \item Particles, people, etc function independently
+    \item Nearby objects interact more strongly than distant ones
+    \item Can often simplify dependence on distant objects
+    \end{itemize}
+  \item Can get more parallelism / locality through model
+    \begin{itemize}
+    \item Limited range of dependency between adjacent time steps
+    \item Can neglect or approximate far-field effects
+    \end{itemize}
+  \item Often get parallism at multiple levels
+    \begin{itemize}
+    \item Hierarchical circuit simulation
+    \item Interacting models for climate
+    \item Parallelizing individual experiments in MC or optimization
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Basic styles of simulation}
+
+  \begin{itemize}
+  \item Discrete event systems (continuous or discrete time)
+    \begin{itemize}
+    \item Game of life, logic-level circuit simulation
+    \item Network simulation
+    \end{itemize}
+  \item Particle systems
+    \begin{itemize}
+    \item Billiards, electrons, galaxies, ...
+    \item Ants, cars, ...?
+    \end{itemize}
+  \item Lumped parameter models (ODEs)
+    \begin{itemize}
+    \item Circuits (SPICE), structures, chemical kinetics
+    \end{itemize}
+  \item Distributed parameter models (PDEs / integral equations)
+    \begin{itemize}
+    \item Heat, elasticity, electrostatics, ...
+    \end{itemize}
+  \end{itemize}
+  Often more than one type of simulation appropriate. \\
+  Sometimes more than one at a time!
+
+\end{frame}
+
+\end{document}
