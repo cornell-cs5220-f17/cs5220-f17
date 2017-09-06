@@ -7,4 +7,4 @@ else
 fi
 
 REPO=$(head -n 1 $RFILE)
-GIT_SSH_COMMAND="ssh -i $RFILE" git clone $REPO
+ssh-agent bash -c "ssh-add $RFILE ; git clone $REPO"
