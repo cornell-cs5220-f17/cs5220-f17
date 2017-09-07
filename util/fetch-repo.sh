@@ -7,9 +7,9 @@ else
 fi
 
 REPO=$(head -n 1 $RFILE)
-if echo $REPO | grep "^https" ; then
+if echo $REPO | grep "^http" ; then
   echo "Looks like an HTTPS URL; convert"
-  REPO=`echo $REPO | sed 's/https:[/][/]/git@/' | sed 's/[/]/:/'`
+  REPO=`echo $REPO | sed 's/https*:[/][/]/git@/' | sed 's/[/]/:/'`
 fi
 echo "Fetch from $REPO"
 ssh-agent bash -c "ssh-add $RFILE ; git clone $REPO"
