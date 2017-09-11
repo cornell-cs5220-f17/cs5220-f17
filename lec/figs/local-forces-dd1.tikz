@@ -1,0 +1,37 @@
+\begin{tikzpicture}[y=-1cm]
+
+% objects at depth 50:
+\draw[black] (2.44475,1.55575) circle (0.15875cm);
+\draw[black] (2.44475,1.55575) circle (0.03175cm);
+\draw[black] (1.778,2.0955) circle (0.15875cm);
+\draw[black] (1.778,2.0955) circle (0.03175cm);
+\draw[black] (3.33375,3.07975) circle (0.15875cm);
+\draw[black] (3.33375,3.07975) circle (0.03175cm);
+\draw[black] (3.048,2.413) circle (0.15875cm);
+\draw[black] (3.048,2.413) circle (0.03175cm);
+\draw[black] (2.06375,3.46075) circle (0.15875cm);
+\draw[black] (2.06375,3.46075) circle (0.03175cm);
+\draw[black] (3.52425,4.28625) circle (0.15875cm);
+\draw[black] (3.52425,4.28625) circle (0.03175cm);
+\draw[black] (4.445,4.3815) circle (0.15875cm);
+\draw[black] (4.445,4.3815) circle (0.03175cm);
+\draw[black] (4.572,2.82575) circle (0.15875cm);
+\draw[black] (4.572,2.82575) circle (0.03175cm);
+\draw[black] (5.74675,1.778) circle (0.15875cm);
+\draw[black] (5.74675,1.778) circle (0.03175cm);
+\draw[black] (2.50825,5.42925) circle (0.15875cm);
+\draw[black] (2.50825,5.42925) circle (0.03175cm);
+\draw[black] (5.17525,5.61975) circle (0.15875cm);
+\draw[black] (5.17525,5.61975) circle (0.03175cm);
+\draw[black] (1.27,1.27) -- (1.27,6.35);
+\draw[black] (2.54,1.27) -- (2.54,6.35);
+\draw[black] (3.81,1.27) -- (3.81,6.35);
+\draw[black] (5.08,1.27) -- (5.08,6.35);
+\draw[black] (6.35,1.27) -- (6.35,6.35);
+\draw[black] (1.27,1.27) -- (6.35,1.27);
+\draw[black] (1.27,2.54) -- (6.35,2.54);
+\draw[black] (1.27,3.81) -- (6.35,3.81);
+\draw[black] (1.27,5.08) -- (6.35,5.08);
+\draw[black] (1.27,6.35) -- (6.35,6.35);
+
+\end{tikzpicture}%

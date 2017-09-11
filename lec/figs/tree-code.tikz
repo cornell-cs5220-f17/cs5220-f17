@@ -1,0 +1,29 @@
+\begin{tikzpicture}[y=-1cm,scale=0.5]
+
+% objects at depth 50:
+\filldraw[black] (2.30293,1.42875) circle (0.08043cm);
+\filldraw[black] (2.8575,0.9525) circle (0.08043cm);
+\filldraw[black] (2.38125,0.15875) circle (0.08043cm);
+\filldraw[black] (1.5875,0.79375) circle (0.08043cm);
+\path[draw=black,fill=red] (2.2225,0.79375) circle (0.16087cm);
+\filldraw[black] (3.57293,6.50875) circle (0.08043cm);
+\filldraw[black] (4.1275,6.0325) circle (0.08043cm);
+\filldraw[black] (3.65125,5.23875) circle (0.08043cm);
+\filldraw[black] (2.8575,5.87375) circle (0.08043cm);
+\path[draw=black,fill=blue] (3.4925,5.87375) circle (0.16087cm);
+\path[draw=black,fill=yellow] (2.8575,3.33163) circle (0.22648cm);
+\filldraw[black] (19.92418,3.4925) circle (0.08043cm);
+\filldraw[black] (20.47875,3.01625) circle (0.08043cm);
+\filldraw[black] (19.20875,2.8575) circle (0.08043cm);
+\filldraw[black] (20.16125,1.74625) circle (0.08043cm);
+\path[draw=black,fill=green] (20.00038,2.54) circle (0.16087cm);
+\draw[semithick,red] (1.27,0) rectangle (5.08,3.81);
+\draw[semithick,blue] (1.27,3.8608) rectangle (5.08,7.62);
+\draw[very thick,yellow] (1.11125,-0.15875) rectangle (8.89,7.77875);
+\draw[semithick,green] (18.0975,1.16205) rectangle (21.9075,4.92125);
+\draw[arrows=-to,black] (19.20875,2.8575) -- (3.175,3.33375);
+\draw[arrows=-to,black] (19.20875,2.8575) -- (20.16125,1.74625);
+\draw[arrows=-to,black] (19.20875,2.8575) -- (20.32,3.01625);
+\draw[arrows=-to,black] (19.20875,2.8575) -- (19.84375,3.4925);
+
+\end{tikzpicture}%

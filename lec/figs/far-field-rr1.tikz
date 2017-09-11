@@ -1,0 +1,23 @@
+\begin{tikzpicture}[y=-1cm]
+
+% objects at depth 50:
+\draw[rounded corners=6.3bp,black] (5.08,5.08) rectangle (2.54,2.54);
+\draw[black] (2.69875,2.8575) rectangle (4.92125,3.4925);
+\draw[black] (2.69875,4.1275) rectangle (4.92125,4.7625);
+\path (3.01625,3.33375) node[text=black,anchor=base west] {\large{}Mine};
+\path (3.01625,4.60375) node[text=black,anchor=base west] {\large{}Buffered};
+\draw[rounded corners=6.3bp,black] (8.255,5.08) rectangle (5.715,2.54);
+\draw[black] (5.87375,2.8575) rectangle (8.09625,3.4925);
+\draw[black] (5.87375,4.1275) rectangle (8.09625,4.7625);
+\path (6.19125,3.33375) node[text=black,anchor=base west] {\large{}Mine};
+\path (6.19125,4.60375) node[text=black,anchor=base west] {\large{}Buffered};
+\draw[rounded corners=6.3bp,black] (11.43,5.08) rectangle (8.89,2.54);
+\draw[black] (9.04875,2.8575) rectangle (11.27125,3.4925);
+\draw[black] (9.04875,4.1275) rectangle (11.27125,4.7625);
+\path (9.36625,3.33375) node[text=black,anchor=base west] {\large{}Mine};
+\path (9.36625,4.60375) node[text=black,anchor=base west] {\large{}Buffered};
+\draw[->,semithick,black] (4.92125,4.445) -- (5.87375,4.445);
+\draw[->,semithick,black] (8.09625,4.445) -- (9.04875,4.445);
+\draw[->,semithick,black] (11.27125,4.445) -- (11.7475,4.445) -- (11.7475,5.55625) -- (2.2225,5.55625) -- (2.2225,4.445) -- (2.69875,4.445);
+
+\end{tikzpicture}%

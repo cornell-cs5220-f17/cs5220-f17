@@ -1,0 +1,17 @@
+\begin{tikzpicture}[y=-1cm]
+
+% objects at depth 50:
+\filldraw[black] (4.3815,3.96875) circle (0.0635cm);
+\filldraw[black] (5.969,6.0325) circle (0.0635cm);
+\filldraw[black] (4.22275,4.28625) circle (0.0635cm);
+\draw[black] (3.81,3.175) -- (3.81,7.14375);
+\draw[black] (6.35,3.175) -- (6.35,7.14375);
+\draw[black] (3.175,6.35) -- (6.985,6.35);
+\draw[->,black] (4.1275,4.28625) -- (3.81,3.81);
+\draw[semithick,black] (3.81,3.81) rectangle (6.35,6.35);
+\draw[black] (3.175,3.81) -- (6.985,3.81);
+\draw[->,black] (4.28625,3.96875) -- (3.81,3.81);
+\draw[->,black] (5.87375,6.0325) -- (6.35,6.35);
+\draw[dashed,black] (3.175,3.175) rectangle (6.985,7.14375);
+
+\end{tikzpicture}%

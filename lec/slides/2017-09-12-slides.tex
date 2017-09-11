@@ -1,0 +1,467 @@
+\documentclass{beamer}
+
+\input{commons}
+
+\hdr{2017-09-12}{Locality and parallelism in simulations I}
+
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Parallelism and locality}
+
+  \begin{itemize}
+  \item Real world exhibits {\em parallelism} and {\em locality}
+    \begin{itemize}
+    \item Particles, people, etc function independently
+    \item Nearby objects interact more strongly than distant ones
+    \item Can often simplify dependence on distant objects
+    \end{itemize}
+  \item Can get more parallelism / locality through model
+    \begin{itemize}
+    \item Limited range of dependency between adjacent time steps
+    \item Can neglect or approximate far-field effects
+    \end{itemize}
+  \item Often get parallism at multiple levels
+    \begin{itemize}
+    \item Hierarchical circuit simulation
+    \item Interacting models for climate
+    \item Parallelizing individual experiments in MC or optimization
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Basic styles of simulation}
+
+  \begin{itemize}
+  \item Discrete event systems (continuous or discrete time)
+    \begin{itemize}
+    \item Game of life, logic-level circuit simulation
+    \item Network simulation
+    \end{itemize}
+  \item Particle systems
+    \begin{itemize}
+    \item Billiards, electrons, galaxies, ...
+    \item Ants, cars, ...?
+    \end{itemize}
+  \item Lumped parameter models (ODEs)
+    \begin{itemize}
+    \item Circuits (SPICE), structures, chemical kinetics
+    \end{itemize}
+  \item Distributed parameter models (PDEs / integral equations)
+    \begin{itemize}
+    \item Heat, elasticity, electrostatics, ...
+    \end{itemize}
+  \end{itemize}
+  Often more than one type of simulation appropriate. \\
+  Sometimes more than one at a time!
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Discrete events}
+
+  Basic setup:
+  \begin{itemize}
+  \item Finite set of variables, updated via transition function
+  \item {\em Synchronous} case: finite state machine
+  \item {\em Asynchronous} case: event-driven simulation
+  \item Synchronous example: Game of Life
+  \end{itemize}
+
+  \vspace{5mm}
+  Nice starting point --- no discretization concerns!
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Game of Life}
+
+  \begin{center}
+    \input{figs/game-of-life.tikz}
+  \end{center}
+
+  Game of Life (John Conway):
+  \begin{enumerate}
+  \item Live cell dies with < 2 live neighbors
+  \item Live cell dies with > 3 live neighbors
+  \item Live cell lives with 2--3 live neighbors
+  \item Dead cell becomes live with exactly 3 live neighbors
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Game of Life}
+
+  \begin{center}
+    \input{figs/game-of-life-dd.tikz}
+  \end{center}
+
+  Easy to parallelize by {\em domain decomposition}.
+  \begin{itemize}
+  \item Update work involves {\em volume} of subdomains
+  \item Communication per step on {\em surface} (cyan)
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Game of Life: Pioneers and Settlers}
+
+  What if pattern is ``dilute''?
+  \begin{itemize}
+  \item Few or no live cells at surface at each step
+  \item Think of live cell at a surface as an ``event''
+  \item Only communicate events!
+    \begin{itemize}
+    \item This is {\em asynchronous}
+    \item Harder with message passing --- when do you receive?
+    \end{itemize}
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Asynchronous Game of Life}
+
+  How do we manage events?
+  \begin{itemize}
+  \item Could be {\em speculative} --- assume no communication across boundary
+    for many steps, back up if needed
+  \item Or {\em conservative} --- wait whenever communication possible
+    \begin{itemize}
+    \item possible $\not \equiv$ guaranteed!
+    \item Deadlock: everyone waits for everyone else to send data
+    \item Can get around this with NULL messages
+    \end{itemize}
+  \end{itemize}
+  
+  \vspace{3mm}
+  How do we manage load balance?
+  \begin{itemize}
+  \item No need to simulate quiescent parts of the game!
+  \item Maybe dynamically assign smaller blocks to processors?
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Particle simulation}
+
+  Particles move via Newton ($F = ma$), with
+  \begin{itemize}
+  \item External forces: ambient gravity, currents, etc.
+  \item Local forces: collisions, Van der Waals ($1/r^6$), etc.
+  \item Far-field forces: gravity and electrostatics ($1/r^2$), etc.
+    \begin{itemize}
+    \item Simple approximations often apply (Saint-Venant)
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{A forced example}
+
+  Example force:
+  \[
+    f_i = \sum_j Gm_i m_j
+      \frac{(x_j-x_i)}{r_{ij}^3}
+      \left(1 - \left(\frac{a}{r_{ij}}\right)^{4} \right), \qquad
+      r_{ij} = \|x_i-x_j\|
+  \]
+  \begin{itemize}
+  \item Long-range attractive force ($r^{-2}$)
+  \item Short-range repulsive force ($r^{-6}$)
+  \item Go from attraction to repulsion at radius $a$
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{A simple serial simulation}
+
+  In \textsc{Matlab}, we can write
+\begin{verbatim}
+  npts = 100;
+  t = linspace(0, tfinal, npts);
+  [tout, xyv] = ode113(@fnbody, ...
+                t, [x; v], [], m, g);
+  xout = xyv(:,1:length(x))';
+\end{verbatim}
+  ... but I can't call {\tt ode113} in C in parallel (or can I?)
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{A simple serial simulation}
+
+  Maybe a fixed step leapfrog will do?
+\begin{verbatim}
+  npts = 100;
+  steps_per_pt = 10;
+  dt = tfinal/(steps_per_pt*(npts-1));
+  xout = zeros(2*n, npts);
+  xout(:,1) = x;
+  for i = 1:npts-1
+    for ii = 1:steps_per_pt
+      x = x + v*dt;
+      a = fnbody(x, m, g);
+      v = v + a*dt;
+    end
+    xout(:,i+1) = x;
+  end
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Plotting particles}
+
+  \begin{center}
+    \includegraphics[width=0.9\textwidth]{figs/sph-plot.png}
+  \end{center}
+\end{frame}
+
+
+
+\begin{frame}
+  \frametitle{Pondering particles}
+  
+  \begin{itemize}
+  \item Where do particles ``live'' (esp.~in distributed memory)?
+    \begin{itemize}
+    \item Decompose in space?  By particle number?
+    \item What about clumping?
+    \end{itemize}
+  \item How are long-range force computations organized?
+  \item How are short-range force computations organized?
+  \item How is force computation load balanced?
+  \item What are the boundary conditions?
+  \item How are potential singularities handled?
+  \item What integrator is used?  What step control?
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{External forces}
+
+  Simplest case: no particle interactions.
+  \begin{itemize}
+    \item Embarrassingly parallel (like Monte Carlo)!
+    \item Could just split particles evenly across processors
+    \item Is it that easy?
+      \begin{itemize}
+      \item Maybe some trajectories need short time steps?
+      \item Even with MC, load balance may not be entirely trivial.
+      \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Local forces}
+  
+  \begin{center}
+    \input{figs/local-forces-dd1.tikz}
+  \end{center}
+  \begin{itemize}
+  \item Simplest all-pairs check is $O(n^2)$ (expensive)
+  \item Or only check close pairs (via binning, quadtrees?)
+  \item Communication required for pairs checked
+  \item Usual model: domain decomposition
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Local forces: Communication}
+
+  \begin{center}
+    \input{figs/local-forces-dd2.tikz}
+  \end{center}
+
+  Minimize communication:
+  \begin{itemize}
+  \item Send particles that might affect a neighbor ``soon''
+  \item Trade extra computation against communication
+  \item Want low surface area-to-volume ratios on domains
+  \end{itemize}
+  
+\end{frame}
+
+
+
+\begin{frame}
+  \frametitle{Local forces: Load balance}
+
+  \begin{center}
+    \input{figs/local-forces-dd3.tikz}
+  \end{center}
+
+  \begin{itemize}
+  \item Are particles evenly distributed?
+  \item Do particles remain evenly distributed?
+  \item Can divide space unevenly (e.g.~quadtree/octtree)
+  \end{itemize}
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Far-field forces}
+
+  \begin{center}
+    \input{figs/far-field-rr1.tikz}
+  \end{center}
+
+  \begin{itemize}
+  \item Every particle affects every other particle
+  \item All-to-all communication required
+    \begin{itemize}
+    \item Overlap communication with computation
+    \item Poor memory scaling if everyone keeps everything!
+    \end{itemize}
+  \item Idea: pass particles in a round-robin manner
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Passing particles for far-field forces}
+
+  \begin{center}
+    \input{figs/far-field-rr1.tikz}
+  \end{center}
+
+\begin{verbatim}
+copy local particles to current buf
+for phase = 1:p
+  send current buf to rank+1 (mod p)
+  recv next buf from rank-1 (mod p) 
+  interact local particles with current buf
+  swap current buf with next buf
+end
+\end{verbatim}
+\end{frame}
+
+
+
+\begin{frame}
+  \frametitle{Passing particles for far-field forces}
+
+  Suppose $n = N/p$ particles in buffer.  At each phase
+  \begin{align*}
+    t_{\mathrm{comm}} & \approx \alpha + \beta n \\
+    t_{\mathrm{comp}} & \approx \gamma n^2
+  \end{align*}
+  So we can mask communication with computation if
+  \[
+  n \geq
+    \frac{1}{2\gamma} \left( \beta + \sqrt{\beta^2 + 4 \alpha \gamma} \right)
+    > \frac{\beta}{\gamma}
+  \]
+
+  \vspace{4mm}
+  More efficient serial code \\
+  $\implies$ larger $n$ needed to mask communication! \\
+  $\implies$ worse speed-up as $p$ gets larger (fixed $N$) \\
+  but scaled speed-up ($n$ fixed) remains unchanged.
+
+  \vspace{4mm}
+  This analysis neglects overhead term in LogP.
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Far-field forces: particle-mesh methods}
+
+  Consider $r^{-2}$ electrostatic potential interaction
+  \begin{itemize}
+  \item Enough charges looks like a continuum!
+  \item Poisson equation maps charge distribution to potential
+  \item Use fast Poisson solvers for regular grids (FFT, multigrid)
+  \item Approximation depends on mesh and particle density
+  \item Can clean up leading part of approximation error
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Far-field forces: particle-mesh methods}
+
+  \begin{center}
+    \input{figs/particle-in-cell.tikz}
+  \end{center}
+  
+  \begin{itemize}
+  \item Map particles to mesh points (multiple strategies)
+  \item Solve potential PDE on mesh
+  \item Interpolate potential to particles
+  \item Add correction term -- acts like local force
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Far-field forces: tree methods}
+
+  \begin{center}
+    \input{figs/tree-code.tikz}
+  \end{center}
+  \begin{itemize}
+  \item Distance simplifies things
+    \begin{itemize}
+    \item Andromeda looks like a point mass from here?
+    \end{itemize}
+  \item Build a tree, approximating descendants at each node
+  \item Several variants: Barnes-Hut, FMM, Anderson's method
+  \item More on this later in the semester
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Summary of particle example}
+
+  \begin{itemize}
+  \item Model: Continuous motion of particles
+    \begin{itemize}
+    \item Could be electrons, cars, whatever...
+    \end{itemize}
+  \item Step through discretized time
+  \item Local interactions
+    \begin{itemize}
+    \item Relatively cheap
+    \item Load balance a pain
+    \end{itemize}
+  \item All-pairs interactions
+    \begin{itemize}
+    \item Obvious algorithm is expensive ($O(n^2)$)
+    \item Particle-mesh and tree-based algorithms help
+    \end{itemize}
+  \end{itemize}
+
+  An important special case of lumped/ODE models.
+\end{frame}
+
+\end{document}

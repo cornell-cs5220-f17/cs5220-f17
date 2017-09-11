@@ -1,0 +1,46 @@
+\begin{tikzpicture}[y=-1cm]
+
+% objects at depth 50:
+\draw[black] (0.635,0.635) rectangle (1.5875,1.5875);
+\path[draw=black,fill=red] (0.9525,0.9525) rectangle (1.27,1.27);
+\draw[black] (0.635,0.9525) -- (1.5875,0.9525);
+\draw[black] (0.635,1.27) -- (1.5875,1.27);
+\draw[black] (0.9525,0.635) -- (0.9525,1.5875);
+\draw[black] (1.27,0.635) -- (1.27,1.5875);
+\draw[black] (2.2225,0.635) rectangle (3.175,1.5875);
+\path[draw=black,fill=red] (2.54,0.9525) rectangle (2.8575,1.27);
+\draw[black] (2.2225,0.9525) -- (3.175,0.9525);
+\draw[black] (2.2225,1.27) -- (3.175,1.27);
+\draw[black] (2.54,0.635) -- (2.54,1.5875);
+\draw[black] (2.8575,0.635) -- (2.8575,1.5875);
+\draw[black] (4.445,0.635) rectangle (5.3975,1.5875);
+\path[draw=black,fill=red] (4.7625,0.9525) rectangle (5.08,1.27);
+\draw[black] (4.445,0.9525) -- (5.3975,0.9525);
+\draw[black] (4.445,1.27) -- (5.3975,1.27);
+\draw[black] (4.7625,0.635) -- (4.7625,1.5875);
+\draw[black] (5.08,0.635) -- (5.08,1.5875);
+\draw[black] (6.0325,0.635) rectangle (6.985,1.5875);
+\draw[black] (6.0325,0.9525) -- (6.985,0.9525);
+\draw[black] (6.35,0.635) -- (6.35,1.5875);
+\draw[black] (6.35,0.9525) rectangle (6.6675,1.27);
+\draw[black] (6.0325,1.27) -- (6.985,1.27);
+\draw[black] (6.6675,0.635) -- (6.6675,1.5875);
+\path[draw=black,fill=cyan] (2.54,0.9525) rectangle (2.2225,1.27);
+\path[draw=black,fill=cyan] (2.8575,0.635) rectangle (2.54,0.9525);
+\path[draw=black,fill=cyan] (2.54,0.635) rectangle (2.2225,0.9525);
+\path[draw=black,fill=cyan] (3.175,0.9525) rectangle (2.8575,1.27);
+\path[draw=black,fill=cyan] (4.7625,0.9525) rectangle (4.445,1.27);
+\path[draw=black,fill=cyan] (5.08,0.635) rectangle (4.7625,0.9525);
+\path[draw=black,fill=cyan] (6.6675,0.635) rectangle (6.35,0.9525);
+\path[draw=black,fill=cyan] (6.35,0.9525) rectangle (6.0325,1.27);
+\path[draw=black,fill=cyan] (6.985,0.9525) rectangle (6.6675,1.27);
+\path[draw=black,fill=cyan] (0.9525,0.9525) rectangle (0.635,1.27);
+\draw[semithick,red] (6.6675,0.9525) rectangle (6.35,1.27);
+\path (0.635,2.2225) node[text=black,anchor=base west] {\large{}Lonely};
+\path (2.2225,2.2225) node[text=black,anchor=base west] {\large{}Crowded};
+\path (4.445,2.2225) node[text=black,anchor=base west] {\large{}OK};
+\path (6.0325,2.2225) node[text=black,anchor=base west] {\large{}Born};
+\path (0.635,2.8575) node[text=black,anchor=base west] {\large{}(Dead next step)};
+\path (4.445,2.8575) node[text=black,anchor=base west] {\large{}(Live next step)};
+
+\end{tikzpicture}%
