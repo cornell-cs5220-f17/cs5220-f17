@@ -1,0 +1,14 @@
+\draw[ultra thick,rounded corners] (-2.40pt,21.60pt) rectangle (21.60pt,-2.40pt);
+\draw[fill=blue] (0.00pt,19.20pt) circle [radius=1.4pt]; 
+\draw[fill=blue] (4.80pt,19.20pt) circle [radius=1.4pt]; 
+\draw[fill=blue] (0.00pt,14.40pt) circle [radius=1.4pt]; 
+\draw[fill=blue] (4.80pt,14.40pt) circle [radius=1.4pt]; 
+\draw[fill=blue] (9.60pt,14.40pt) circle [radius=1.4pt]; 
+\draw[fill=blue] (4.80pt,9.60pt) circle [radius=1.4pt]; 
+\draw[fill=blue] (9.60pt,9.60pt) circle [radius=1.4pt]; 
+\draw[fill=blue] (14.40pt,9.60pt) circle [radius=1.4pt]; 
+\draw[fill=blue] (9.60pt,4.80pt) circle [radius=1.4pt]; 
+\draw[fill=blue] (14.40pt,4.80pt) circle [radius=1.4pt]; 
+\draw[fill=blue] (19.20pt,4.80pt) circle [radius=1.4pt]; 
+\draw[fill=blue] (14.40pt,0.00pt) circle [radius=1.4pt]; 
+\draw[fill=blue] (19.20pt,0.00pt) circle [radius=1.4pt]; 

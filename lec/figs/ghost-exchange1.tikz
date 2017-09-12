@@ -1,0 +1,76 @@
+\begin{tikzpicture}
+  \draw[fill=red]   (0.0,-0.2) node[anchor=north] {0};
+  \draw[fill=black] (0.5,-0.2) node[anchor=north] {1};
+  \draw[fill=black] (1.0,-0.2) node[anchor=north] {2};
+  \draw[fill=black] (1.5,-0.2) node[anchor=north] {3};
+  \draw[fill=black] (2.0,-0.2) node[anchor=north] {4};
+  \draw             (2.5,-0.2) node[anchor=north] {5};
+  
+  \draw             (4.0,-0.2) node[anchor=north] {4};
+  \draw[fill=black] (4.5,-0.2) node[anchor=north] {5};
+  \draw[fill=black] (5.0,-0.2) node[anchor=north] {6};
+  \draw[fill=black] (5.5,-0.2) node[anchor=north] {7};
+  \draw[fill=black] (6.0,-0.2) node[anchor=north] {8};
+  \draw[fill=red]   (6.5,-0.2) node[anchor=north] {9};
+  
+  \draw[fill=red]   (0.0,0.2) circle (3pt);
+  \draw[fill=black] (0.5,0.2) circle (3pt);
+  \draw[fill=black] (1.0,0.2) circle (3pt);
+  \draw[fill=black] (1.5,0.2) circle (3pt);
+  \draw[fill=black] (2.0,0.2) circle (3pt);
+  \draw             (2.5,0.2) circle (3pt);
+
+  \draw[thick,blue,->] (2.0,0.2) to [out=-30,in=210] (4.0,0.2);
+  \draw[thick,blue,->] (4.5,0.2) to [out=150,in=30] (2.5,0.2);
+  
+  \draw             (4.0,0.2) circle (3pt);
+  \draw[fill=black] (4.5,0.2) circle (3pt);
+  \draw[fill=black] (5.0,0.2) circle (3pt);
+  \draw[fill=black] (5.5,0.2) circle (3pt);
+  \draw[fill=black] (6.0,0.2) circle (3pt);
+  \draw[fill=red]   (6.5,0.2) circle (3pt);
+
+  \draw[fill=red]   (0.0,1.0) circle (3pt);
+  \draw[fill=black] (0.5,1.0) circle (3pt);
+  \draw[fill=black] (1.0,1.0) circle (3pt);
+  \draw[fill=black] (1.5,1.0) circle (3pt);
+  \draw[fill=black] (2.0,1.0) circle (3pt);
+  \draw             (2.5,1.0) circle (3pt);
+
+  \draw[thick,blue,->] (2.0,1.0) to [out=-30,in=210] (4.0,1.0);
+  \draw[thick,blue,->] (4.5,1.0) to [out=150,in=30]  (2.5,1.0);
+        
+  \draw             (4.0,1.0) circle (3pt);
+  \draw[fill=black] (4.5,1.0) circle (3pt);
+  \draw[fill=black] (5.0,1.0) circle (3pt);
+  \draw[fill=black] (5.5,1.0) circle (3pt);
+  \draw[fill=black] (6.0,1.0) circle (3pt);
+  \draw[fill=red]   (6.5,1.0) circle (3pt);
+
+  \draw[->,thick] (0.0,0.35) -- (0.4,0.85);
+  \draw[->,thick] (0.5,0.35) -- (0.9,0.85);
+  \draw[->,thick] (1.0,0.35) -- (1.4,0.85);
+  \draw[->,thick] (1.5,0.35) -- (1.9,0.85);
+  \draw[->,thick] (0.5,0.35) -- (0.5,0.85);
+  \draw[->,thick] (1.0,0.35) -- (1.0,0.85);
+  \draw[->,thick] (1.5,0.35) -- (1.5,0.85);
+  \draw[->,thick] (2.0,0.35) -- (2.0,0.85);
+  \draw[->,thick] (1.0,0.35) -- (0.6,0.85);
+  \draw[->,thick] (1.5,0.35) -- (1.1,0.85);
+  \draw[->,thick] (2.0,0.35) -- (1.6,0.85);
+  \draw[->,thick] (2.5,0.35) -- (2.1,0.85);
+
+  \draw[->,thick] (4.0,0.35) -- (4.4,0.85);
+  \draw[->,thick] (4.5,0.35) -- (4.9,0.85);
+  \draw[->,thick] (5.0,0.35) -- (5.4,0.85);
+  \draw[->,thick] (5.5,0.35) -- (5.9,0.85);
+  \draw[->,thick] (4.5,0.35) -- (4.5,0.85);
+  \draw[->,thick] (5.0,0.35) -- (5.0,0.85);
+  \draw[->,thick] (5.5,0.35) -- (5.5,0.85);
+  \draw[->,thick] (6.0,0.35) -- (6.0,0.85);
+  \draw[->,thick] (5.0,0.35) -- (4.6,0.85);
+  \draw[->,thick] (5.5,0.35) -- (5.1,0.85);
+  \draw[->,thick] (6.0,0.35) -- (5.6,0.85);
+  \draw[->,thick] (6.5,0.35) -- (6.1,0.85);
+
+\end{tikzpicture}

@@ -1,0 +1,11 @@
+\begin{tikzpicture}
+  \draw[<->,thick] (0,1.5) node[above] {$u$} |- (7,0);
+  \draw[fill=gray] (0.5,0) rectangle (2.5,1.25);
+  \draw[fill=gray] (2.5,0) rectangle (4.5,1.00);
+  \draw[fill=gray] (4.5,0) rectangle (6.5,0.70);
+  \draw[<->] (2.5,1.5) -- (4.5,1.5);
+  \draw (3.5,1.5) node[anchor=south] {$h$};
+  \draw (1.5,0) node[anchor=north] {$x-h$};
+  \draw (3.5,0) node[anchor=north] {$x$};
+  \draw (5.5,0) node[anchor=north] {$x+h$};
+\end{tikzpicture}
