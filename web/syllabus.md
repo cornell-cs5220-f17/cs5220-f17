@@ -17,7 +17,7 @@ OH: W 1:30-2:30, Th 10-11 or [by appointment](http://www.meetme.so/DavidBindel).
 
 TA: [Eric Hans Lee](http://www.cs.cornell.edu/~erichanslee)  
 Email: <erichanslee@cs.cornell.edu>  
-OH: Tuesday and Thursday 1-2 pm, Gates G11 or by appointment.
+OH: Tuesday 11-12 Gates G11 and Thursday 11-12 Gates G15, or by appointment.
 
 ## Course description
 
