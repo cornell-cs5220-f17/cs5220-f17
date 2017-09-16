@@ -12,7 +12,8 @@
   due: 2017-09-14
 -
   desc: "HW2: Getting started with MPI"
-  due: 2017-09-19
+  url: https://github.com/cornell-cs5220-f17/cs5220-HW2
+  due: 2017-09-22
 -
   desc: "HW3: Getting started with OpenMP"
   due: 2017-09-26
