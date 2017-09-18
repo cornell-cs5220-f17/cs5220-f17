@@ -1,0 +1,566 @@
+\documentclass{beamer}
+
+\input{commons}
+
+\hdr{2017-09-19}{Distributed Memory Programming}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Plan for this week}
+
+  \begin{itemize}
+  \item This week: distributed memory programming
+    \begin{itemize}
+    \item Distributed memory HW issues (topologies, cost models)
+    \item Message-passing programming concepts (and MPI)
+    \item Some simple examples
+    \end{itemize}
+
+  \vspace{5mm}
+  \item Next week: shared memory programming
+    \begin{itemize}
+    \item Shared memory HW issues (cache coherence)
+    \item Threaded programming concepts (pthreads and OpenMP)
+    \item A simple example (Monte Carlo)
+    \end{itemize}
+  \end{itemize}
+    
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Basic questions}
+
+  How much does a message cost?
+  \begin{itemize}
+  \item {\em Latency}: time to get between processors
+  \item {\em Bandwidth}: data transferred per unit time
+  \item How does {\em contention} affect communication?
+  \end{itemize}
+  This is a combined hardware-software question!
+
+  \vspace{5mm}
+  We want to understand just enough for reasonable modeling.
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Thinking about interconnects}
+
+  Several features characterize an interconnect:
+  \begin{itemize}
+  \item {\em Topology}: who do the wires connect?
+  \item {\em Routing}: how do we get from A to B?
+  \item {\em Switching}: circuits, store-and-forward?
+  \item {\em Flow control}: how do we manage limited resources?
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Thinking about interconnects}
+
+  \begin{itemize}
+  \item Links are like streets
+  \item Switches are like intersections
+  \item Hops are like blocks traveled
+  \item Routing algorithm is like a travel plan
+  \item Stop lights are like flow control
+  \item Short packets are like cars,
+    long ones like buses?
+  \end{itemize}
+  At some point the analogy breaks down...
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Bus topology}
+
+  \begin{center}
+    \input{figs/topo-bus.tikz}
+  \end{center}
+
+  \begin{itemize}
+  \item One set of wires (the bus)
+  \item Only one processor allowed at any given time
+    \begin{itemize}
+    \item {\em Contention} for the bus is an issue
+    \end{itemize}
+  \item Example: basic Ethernet, some SMPs
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Crossbar}
+
+  \begin{center}
+    \input{figs/topo-xbar.tikz}
+  \end{center}
+
+  \begin{itemize}
+  \item Dedicated path from every input to every output
+    \begin{itemize}
+    \item Takes $O(p^2)$ switches and wires!
+    \end{itemize}
+  \item Example: recent AMD/Intel multicore chips \\
+    (older: front-side bus)
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Bus vs. crossbar}
+
+  \begin{itemize}
+  \item Crossbar: more hardware
+  \item Bus: more contention (less capacity?)
+  \item Generally seek happy medium
+    \begin{itemize}
+    \item Less contention than bus
+    \item Less hardware than crossbar
+    \item May give up one-hop routing
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Network properties}
+  
+  Think about latency and bandwidth via two quantities:
+  \begin{itemize}
+  \item {\em Diameter}: max distance between nodes
+  \item {\em Bisection bandwidth}: smallest bandwidth cut to bisect
+    \begin{itemize}
+    \item Particularly important for all-to-all communication
+    \end{itemize}
+  \end{itemize}
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Linear topology}
+  
+  \begin{center}
+  \input{figs/topo-linear.tikz}
+  \end{center}
+  \begin{itemize}
+  \item $p-1$ links
+  \item Diameter $p-1$
+  \item Bisection bandwidth $1$
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Ring topology}
+
+  \begin{center}
+  \input{figs/topo-ring.tikz}
+  \end{center}
+
+  \begin{itemize}
+  \item $p$ links
+  \item Diameter $p/2$
+  \item Bisection bandwidth $2$
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Mesh}
+
+  \begin{center}
+  \input{figs/topo-mesh.tikz}
+  \end{center}
+  \begin{itemize}
+  \item May be more than two dimensions
+  \item Route along each dimension in turn
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Torus}
+
+  \begin{center}
+    \input{figs/topo-torus.tikz} \\
+    Torus : Mesh :: Ring : Linear
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Hypercube}
+  \begin{center}
+  \input{figs/topo-cube.tikz}
+  \end{center}
+  \begin{itemize}
+  \item Label processors with binary numbers
+  \item Connect $p_1$ to $p_2$ if labels differ in one bit
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Fat tree}
+  \begin{center}
+  \input{figs/topo-fat.tikz}
+  \end{center}
+  \begin{itemize}
+  \item Processors at leaves
+  \item Increase link bandwidth near root
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Others...}
+
+  \begin{itemize}
+  \item Butterfly network
+  \item Omega network
+  \item Cayley graph
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Current picture}
+
+  \begin{itemize}
+  \item Old: latencies = hops
+  \item New: roughly constant latency (?)
+    \begin{itemize}
+    \item Wormhole routing (or cut-through) flattens latencies
+      vs store-forward at hardware level
+    \item Software stack dominates HW latency!
+    \item Latencies {\em not} same between networks (in box vs across)
+    \item May also have store-forward at library level
+    \end{itemize}
+ \vspace{2mm}
+  \item Old: mapping algorithms to topologies
+  \item New: avoid topology-specific optimization
+    \begin{itemize}
+    \item Want code that runs on next year's machine, too!
+    \item Bundle topology awareness in vendor MPI libraries?
+    \item Sometimes specify a {\em software} topology
+    \end{itemize}
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{$\alpha$-$\beta$ model}
+
+  Crudest model: $t_{\mathrm{comm}} = \alpha + \beta M$
+  \begin{itemize}
+  \item $t_{\mathrm{comm}} = $ communication time
+  \item $\alpha = $ latency
+  \item $\beta = $ inverse bandwidth
+  \item $M = $ message size
+  \end{itemize}
+  Works pretty well for basic guidance!
+
+  \vspace{5mm}
+  Typically $\alpha \gg \beta \gg t_{\mathrm{flop}}$.
+  More money on network, lower $\alpha$.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{LogP model}
+  
+  Like $\alpha$-$\beta$, but includes CPU time on send/recv:
+  \begin{itemize}
+  \item Latency: the usual
+  \item Overhead: CPU time to send/recv
+  \item Gap: min time between send/recv
+  \item P: number of processors
+  \end{itemize}
+  Assumes small messages (gap $\sim$ bw for fixed message size).
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Communication costs}
+
+  Some basic goals:
+  \begin{itemize}
+  \item Prefer larger to smaller messages (avoid latency)
+  \item Avoid communication when possible
+    \begin{itemize}
+    \item Great speedup for Monte Carlo and other embarrassingly parallel codes!
+    \end{itemize}
+  \item Overlap communication with computation
+    \begin{itemize}
+    \item Models tell you how much computation is needed to mask
+      communication costs.
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Message passing programming}
+  
+  Basic operations:
+  \begin{itemize}
+  \item Pairwise messaging: send/receive
+  \item Collective messaging: broadcast, scatter/gather
+  \item Collective computation: parallel prefix (sum, max, ...)
+  \item Barriers (no need for locks!)
+  \item Environmental inquiries (who am I? do I have mail?)
+  \end{itemize}
+  (Much of what follows is adapted from Bill Gropp's material.)
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{MPI}
+
+  \begin{itemize}
+  \item Message Passing Interface
+  \item An interface spec --- many implementations
+  \item Bindings to C, C++, Fortran
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Hello world}
+
+\begin{verbatim}
+#include <mpi.h>
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    int rank, size;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    printf("Hello from %d of %d\n", rank, size);
+    MPI_Finalize();
+    return 0;
+}
+\end{verbatim}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Communicators}
+
+  \begin{itemize}
+  \item Processes form {\em groups}
+  \item Messages sent in {\em contexts}
+    \begin{itemize}
+    \item Separate communication for libraries
+    \end{itemize}
+  \item Group + context = communicator
+  \item Identify process by rank in group
+  \item Default is {\tt MPI\_COMM\_WORLD}
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Sending and receiving}
+
+  Need to specify:
+  \begin{itemize}
+  \item What's the data?
+    \begin{itemize}
+    \item Different machines use different encodings (e.g. endian-ness)
+    \item $\implies$ ``bag o' bytes'' model is inadequate
+    \end{itemize}
+  \item How do we identify processes?
+  \item How does receiver identify messages?
+  \item What does it mean to ``complete'' a send/recv?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{MPI datatypes}
+  
+  Message is (address, count, datatype).  Allow:
+  \begin{itemize}
+  \item Basic types ({\tt MPI\_INT}, {\tt MPI\_DOUBLE})
+  \item Contiguous arrays
+  \item Strided arrays
+  \item Indexed arrays
+  \item Arbitrary structures
+  \end{itemize}
+  Complex data types may hurt performance?
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{MPI tags}
+
+  Use an integer {\em tag} to label messages
+  \begin{itemize}
+  \item Help distinguish different message types
+  \item Can screen messages with wrong tag
+  \item {\tt MPI\_ANY\_TAG} is a wildcard
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{MPI Send/Recv}
+
+Basic blocking point-to-point communication:
+\begin{verbatim}
+int 
+MPI_Send(void *buf, int count, 
+         MPI_Datatype datatype, 
+         int dest, int tag, MPI_Comm comm);
+
+int 
+MPI_Recv(void *buf, int count,
+         MPI_Datatype datatype,
+         int source, int tag, MPI_Comm comm, 
+         MPI_Status *status);
+
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{MPI send/recv semantics}
+
+  \begin{itemize}
+  \item
+    Send returns when data gets to {\em system}
+    \begin{itemize}
+    \item ... might not yet arrive at destination!
+    \end{itemize}
+  \item
+    Recv ignores messages that don't match source and tag
+    \begin{itemize}
+    \item {\tt MPI\_ANY\_SOURCE} and {\tt MPI\_ANY\_TAG} are wildcards
+    \end{itemize}
+  \item
+    Recv {\tt status} contains more info (tag, source, size)
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Ping-pong pseudocode}
+
+Process 0:
+\begin{verbatim}
+for i = 1:ntrials
+  send b bytes to 1
+  recv b bytes from 1
+end
+\end{verbatim}
+
+Process 1:
+\begin{verbatim}
+for i = 1:ntrials
+  recv b bytes from 0
+  send b bytes to 0
+end
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Ping-pong MPI}
+
+\begin{verbatim}
+void ping(char* buf, int n, int ntrials, int p)
+{
+    for (int i = 0; i < ntrials; ++i) {
+        MPI_Send(buf, n, MPI_CHAR, p, 0, 
+                 MPI_COMM_WORLD);
+        MPI_Recv(buf, n, MPI_CHAR, p, 0, 
+                 MPI_COMM_WORLD, NULL);
+    }
+}
+\end{verbatim}
+(Pong is similar)
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Ping-pong MPI}
+
+\begin{verbatim}
+for (int sz = 1; sz <= MAX_SZ; sz += 1000) {
+    if (rank == 0) {
+        clock_t t1, t2;
+        t1 = clock();
+        ping(buf, sz, NTRIALS, 1);
+        t2 = clock();
+        printf("%d %g\n", sz, 
+               (double) (t2-t1)/CLOCKS_PER_SEC);
+    } else if (rank == 1) {
+        pong(buf, sz, NTRIALS, 0);
+    }
+}
+\end{verbatim}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Running the code}
+
+On my laptop (OpenMPI)
+\begin{verbatim}
+mpicc -std=c99 pingpong.c -o pingpong.x
+mpirun -np 2 ./pingpong.x
+\end{verbatim}
+Details vary, but this is pretty normal.
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Approximate $\alpha$-$\beta$ parameters (2-core laptop)}
+
+  \begin{center}
+  \input{figs/ping/laptop.tikz}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Where we are now}
+
+  Can write a lot of MPI code with 6 operations we've seen:
+  \begin{itemize}
+  \item {\tt MPI\_Init}
+  \item {\tt MPI\_Finalize}
+  \item {\tt MPI\_Comm\_size}
+  \item {\tt MPI\_Comm\_rank}
+  \item {\tt MPI\_Send}
+  \item {\tt MPI\_Recv}
+  \end{itemize}
+  ... but there are sometimes better ways.
+  
+  \vspace{5mm}
+  Next time: non-blocking and collective operations!
+\end{frame}
+
+\end{document}

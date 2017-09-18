@@ -1,0 +1,38 @@
+\begin{tikzpicture}
+\node(ft0) [draw,rectangle] at (0,0) {P0};
+\node(ft1) [draw,rectangle] at (1,0) {P1};
+\node(ft2) [draw,rectangle] at (2,0) {P2};
+\node(ft3) [draw,rectangle] at (3,0) {P3};
+\node(ft4) [draw,rectangle] at (4,0) {P4};
+\node(ft5) [draw,rectangle] at (5,0) {P5};
+\node(ft6) [draw,rectangle] at (6,0) {P6};
+\node(ft7) [draw,rectangle] at (7,0) {P7};
+
+\node(ft01) [circle,fill=black!50] at (0.5,1) { };
+\node(ft23) [circle,fill=black!50] at (2.5,1) { };
+\node(ft45) [circle,fill=black!50] at (4.5,1) { };
+\node(ft67) [circle,fill=black!50] at (6.5,1) { };
+
+\node(ft03) [circle,fill=black!50] at (1.5,2) { };
+\node(ft47) [circle,fill=black!50] at (5.5,2) { };
+
+\node(ft07) [circle,fill=black!50] at (3.5,3) { };
+
+\draw[line width=1pt] (ft0) -- (ft01);
+\draw[line width=1pt] (ft1) -- (ft01);
+\draw[line width=1pt] (ft2) -- (ft23);
+\draw[line width=1pt] (ft3) -- (ft23);
+\draw[line width=1pt] (ft4) -- (ft45);
+\draw[line width=1pt] (ft5) -- (ft45);
+\draw[line width=1pt] (ft6) -- (ft67);
+\draw[line width=1pt] (ft7) -- (ft67);
+
+\draw[line width=2pt] (ft01) -- (ft03);
+\draw[line width=2pt] (ft23) -- (ft03);
+\draw[line width=2pt] (ft45) -- (ft47);
+\draw[line width=2pt] (ft67) -- (ft47);
+
+\draw[line width=4pt] (ft03) -- (ft07);
+\draw[line width=4pt] (ft47) -- (ft07);
+
+\end{tikzpicture}

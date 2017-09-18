@@ -48,7 +48,7 @@
 -
   date: 2017-09-14
   info: Parallelism and locality in simulations
-  hw: P1 due, P2 out
+  hw: P1 due
   slides: 2017-09-14-slides.pdf
 #
 # ==================
@@ -57,10 +57,12 @@
 -
   date: 2017-09-19
   info: Distributed memory programming
-  hw: HW2 due
+  hw: P2 out
+  slides: 2017-09-19-slides.pdf
 -
   date: 2017-09-21
   info: Distributed memory programming
+  hw: HW2 due
 #
 # ==================
 # Week 6

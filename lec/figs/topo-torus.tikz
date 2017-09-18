@@ -1,0 +1,43 @@
+\begin{tikzpicture}
+\node (mt0) [draw,rectangle] at (0,0) {P0};
+\node (mt1) [draw,rectangle] at (1,0) {P1};
+\node (mt2) [draw,rectangle] at (2,0) {P2};
+\node (mt3) [draw,rectangle] at (3,0) {P3};
+\node (mt4) [draw,rectangle] at (0,1) {P4};
+\node (mt5) [draw,rectangle] at (1,1) {P5};
+\node (mt6) [draw,rectangle] at (2,1) {P6};
+\node (mt7) [draw,rectangle] at (3,1) {P7};
+\node (mt8) [draw,rectangle] at (0,2) {P8};
+\node (mt9) [draw,rectangle] at (1,2) {P9};
+\node (mtA) [draw,rectangle] at (2,2) {PA};
+\node (mtB) [draw,rectangle] at (3,2) {PB};
+\node (mtC) [draw,rectangle] at (0,3) {PC};
+\node (mtD) [draw,rectangle] at (1,3) {PD};
+\node (mtE) [draw,rectangle] at (2,3) {PE};
+\node (mtF) [draw,rectangle] at (3,3) {PF};
+
+\draw[thick] (mt0) -- (mt1);  \draw[thick] (mt0) -- (mt4);
+\draw[thick] (mt1) -- (mt2);  \draw[thick] (mt4) -- (mt8);
+\draw[thick] (mt2) -- (mt3);  \draw[thick] (mt8) -- (mtC);
+\draw (mt3.east) to[out=-30,in=210] (mt0.west);
+\draw (mtC.north) to[out=60,in=-60] (mt0.south);
+
+\draw[thick] (mt4) -- (mt5);  \draw[thick] (mt1) -- (mt5);
+\draw[thick] (mt5) -- (mt6);  \draw[thick] (mt5) -- (mt9);
+\draw[thick] (mt6) -- (mt7);  \draw[thick] (mt9) -- (mtD);
+\draw (mt7.east) to[out=-30,in=210] (mt4.west);
+\draw (mtD.north) to[out=60,in=-60] (mt1.south);
+
+\draw[thick] (mt8) -- (mt9);  \draw[thick] (mt2) -- (mt6);
+\draw[thick] (mt9) -- (mtA);  \draw[thick] (mt6) -- (mtA);
+\draw[thick] (mtA) -- (mtB);  \draw[thick] (mtA) -- (mtE);
+\draw (mtB.east) to[out=-30,in=210] (mt8.west);
+\draw (mtE.north) to[out=60,in=-60] (mt2.south);
+
+\draw[thick] (mtC) -- (mtD);  \draw[thick] (mt3) -- (mt7);
+\draw[thick] (mtD) -- (mtE);  \draw[thick] (mt7) -- (mtB);
+\draw[thick] (mtE) -- (mtF);  \draw[thick] (mtB) -- (mtF);
+\draw (mtF.east) to[out=-30,in=210] (mtC.west);
+\draw (mtF.north) to[out=60,in=-60] (mt3.south);
+
+\end{tikzpicture}

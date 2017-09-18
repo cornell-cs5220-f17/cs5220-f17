@@ -1,0 +1,29 @@
+\begin{tikzpicture}
+% Horizontal lines
+\draw (-0.5,0) node[left] {P3} -- (3,0);
+\draw (-0.5,1) node[left] {P2} -- (3,1);
+\draw (-0.5,2) node[left] {P1} -- (3,2);
+\draw (-0.5,3) node[left] {P0} -- (3,3);
+% Vertical lines
+\draw (0,-0.5) node[below] {P0} -- (0,3);
+\draw (1,-0.5) node[below] {P1} -- (1,3);
+\draw (2,-0.5) node[below] {P2} -- (2,3);
+\draw (3,-0.5) node[below] {P3} -- (3,3);
+% Intersection circles
+\draw[fill=black!50] (0,0) circle (5pt);
+\draw[fill=black!50] (0,1) circle (5pt);
+\draw[fill=black!50] (0,2) circle (5pt);
+\draw[fill=black!50] (0,3) circle (5pt);
+\draw[fill=black!50] (1,0) circle (5pt);
+\draw[fill=black!50] (1,1) circle (5pt);
+\draw[fill=black!50] (1,2) circle (5pt);
+\draw[fill=black!50] (1,3) circle (5pt);
+\draw[fill=black!50] (2,0) circle (5pt);
+\draw[fill=black!50] (2,1) circle (5pt);
+\draw[fill=black!50] (2,2) circle (5pt);
+\draw[fill=black!50] (2,3) circle (5pt);
+\draw[fill=black!50] (3,0) circle (5pt);
+\draw[fill=black!50] (3,1) circle (5pt);
+\draw[fill=black!50] (3,2) circle (5pt);
+\draw[fill=black!50] (3,3) circle (5pt);
+\end{tikzpicture}

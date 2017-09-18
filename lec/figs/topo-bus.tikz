@@ -1,0 +1,12 @@
+\begin{tikzpicture}
+\draw[ultra thick] (0,0) -- (6,0);
+\draw (3,0) -- (3,-1) node[below] {Memory};
+\draw (0,0) -- (0,2) node[above] {P0};
+\draw (0,1) -- (0.5,1) -- (0.5,1.5) node[above]{\$};
+\draw (2,0) -- (2,2) node[above] {P1};
+\draw (2,1) -- (2.5,1) -- (2.5,1.5) node[above]{\$};
+\draw (4,0) -- (4,2) node[above] {P2};
+\draw (4,1) -- (4.5,1) -- (4.5,1.5) node[above]{\$};
+\draw (6,0) -- (6,2) node[above] {P3};
+\draw (6,1) -- (6.5,1) -- (6.5,1.5) node[above]{\$};
+\end{tikzpicture}

@@ -1,0 +1,68 @@
+\begin{tikzpicture}
+\node (ht0) [draw,rectangle] at (0,0) {P0};
+\node (ht1) [draw,rectangle] at (1,0) {P1};
+\node (ht2) [draw,rectangle] at (0,1) {P2};
+\node (ht3) [draw,rectangle] at (1,1) {P3};
+
+\begin{scope}[xshift=4cm]
+\node (ht4) [draw,rectangle] at (0,0) {P4};
+\node (ht5) [draw,rectangle] at (1,0) {P5};
+\node (ht6) [draw,rectangle] at (0,1) {P6};
+\node (ht7) [draw,rectangle] at (1,1) {P7};
+\end{scope}
+
+\begin{scope}[yshift=2cm,xshift=-1.1cm]]
+\node (ht8) [draw,rectangle] at (0,0) {P8};
+\node (ht9) [draw,rectangle] at (1,0) {P9};
+\node (htA) [draw,rectangle] at (0,1) {PA};
+\node (htB) [draw,rectangle] at (1,1) {PB};
+
+\begin{scope}[xshift=4cm]
+\node (htC) [draw,rectangle] at (0,0) {PC};
+\node (htD) [draw,rectangle] at (1,0) {PD};
+\node (htE) [draw,rectangle] at (0,1) {PE};
+\node (htF) [draw,rectangle] at (1,1) {PF};
+\end{scope}
+\end{scope}
+
+\draw (ht0) -- (ht1);
+\draw (ht0) -- (ht2);
+\draw (ht2) -- (ht3);
+\draw (ht1) -- (ht3);
+
+\draw (ht4) -- (ht5);
+\draw (ht4) -- (ht6);
+\draw (ht6) -- (ht7);
+\draw (ht5) -- (ht7);
+
+\draw (ht0.south) to[out=-20,in=-160] (ht4.south);
+\draw (ht1.south) to[out=-20,in=-160] (ht5.south);
+\draw (ht2.south) to[out=-20,in=-160] (ht6.south);
+\draw (ht3.south) to[out=-20,in=-160] (ht7.south);
+
+\draw (ht8) -- (ht9);
+\draw (ht8) -- (htA);
+\draw (htA) -- (htB);
+\draw (ht9) -- (htB);
+
+\draw (htC) -- (htD);
+\draw (htC) -- (htE);
+\draw (htE) -- (htF);
+\draw (htD) -- (htF);
+
+\draw (ht8.north) to[out=20,in=160] (htC.north);
+\draw (ht9.north) to[out=20,in=160] (htD.north);
+\draw (htA.north) to[out=20,in=160] (htE.north);
+\draw (htB.north) to[out=20,in=160] (htF.north);
+
+\draw (ht0) -- (ht8);
+\draw (ht1) -- (ht9);
+\draw (ht2) -- (htA);
+\draw (ht3) -- (htB);
+
+\draw (ht4) -- (htC);
+\draw (ht5) -- (htD);
+\draw (ht6) -- (htE);
+\draw (ht7) -- (htF);
+
+\end{tikzpicture}

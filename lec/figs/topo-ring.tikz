@@ -1,0 +1,10 @@
+\begin{tikzpicture}
+\node (lt0) [draw,rectangle] at (0,0) {P0};
+\node (lt1) [draw,rectangle] at (2,0) {P1};
+\node (lt2) [draw,rectangle] at (2,2) {P2};
+\node (lt3) [draw,rectangle] at (0,2) {P3};
+\draw (lt0) -- (lt1);
+\draw (lt1) -- (lt2);
+\draw (lt2) -- (lt3);
+\draw (lt3) -- (lt0);
+\end{tikzpicture}
