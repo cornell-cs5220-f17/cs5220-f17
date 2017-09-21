@@ -1,0 +1,13 @@
+\begin{tikzpicture}
+  \input{figs/mpi-block.tikz}
+  \draw[ultra thick,->] (4.25,2) -- (5.25,2)
+       node[above,midway] {\footnotesize Bcast};
+  \begin{scope}[xshift=6cm]
+    \input{figs/mpi-block.tikz}      
+  \end{scope}
+  \node[right] at (0,3.5) {A};
+  \node[right] at (6,3.5) {A};
+  \node[right] at (6,2.5) {A};
+  \node[right] at (6,1.5) {A};
+  \node[right] at (6,0.5) {A};
+\end{tikzpicture}

@@ -1,0 +1,12 @@
+\begin{tikzpicture}
+  \draw[very thick]        (0,3) -- (0,2);
+  \draw[very thick,dashed] (0,2) -- (0,1);
+  \draw[very thick,->]     (0,1) -- (0,0);
+  \node[left] at (0,2) {Sendrecv};
+  \draw[ultra thick,->]    (0,2) -- (2,1);
+  \draw[very thick]        (2,3) -- (2,2);
+  \draw[very thick,dashed] (2,2) -- (2,1);
+  \draw[very thick,->]     (2,1) -- (2,0);
+  \node[right] at (2,2) {Sendrecv};
+  \draw[ultra thick,->]    (2,2) -- (0,1);
+\end{tikzpicture}

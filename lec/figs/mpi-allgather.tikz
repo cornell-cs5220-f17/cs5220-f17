@@ -1,0 +1,27 @@
+\begin{tikzpicture}
+  \input{figs/mpi-block.tikz}
+  \draw[ultra thick,->] (4.25,2) -- (5.25,2);
+  \begin{scope}[xshift=6cm]
+    \input{figs/mpi-block.tikz}      
+  \end{scope}
+  \node[right] at (0,3.5) {A};
+  \node[right] at (0,2.5) {B};
+  \node[right] at (0,1.5) {C};
+  \node[right] at (0,0.5) {D};
+  \node[right] at (6,3.5) {A};
+  \node[right] at (6,2.5) {A};
+  \node[right] at (6,1.5) {A};
+  \node[right] at (6,0.5) {A};
+  \node[right] at (7,3.5) {B};
+  \node[right] at (7,2.5) {B};
+  \node[right] at (7,1.5) {B};
+  \node[right] at (7,0.5) {B};
+  \node[right] at (8,3.5) {C};
+  \node[right] at (8,2.5) {C};
+  \node[right] at (8,1.5) {C};
+  \node[right] at (8,0.5) {C};
+  \node[right] at (9,3.5) {D};
+  \node[right] at (9,2.5) {D};
+  \node[right] at (9,1.5) {D};
+  \node[right] at (9,0.5) {D};
+\end{tikzpicture}

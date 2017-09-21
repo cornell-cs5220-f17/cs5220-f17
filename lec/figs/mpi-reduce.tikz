@@ -1,0 +1,13 @@
+\begin{tikzpicture}
+\input{figs/mpi-ppblock.tikz}
+\draw[ultra thick,->] (3.25,2) -- (5.25,2)
+     node[above,midway] {\footnotesize Reduce};
+\begin{scope}[xshift=6cm]
+  \input{figs/mpi-ppblock.tikz}
+\end{scope}
+\node[right] at (0,3.5) {A};
+\node[right] at (0,2.5) {B};
+\node[right] at (0,1.5) {C};
+\node[right] at (0,0.5) {D};
+\node[right] at (6,3.5) {A+B+C+D};
+\end{tikzpicture}

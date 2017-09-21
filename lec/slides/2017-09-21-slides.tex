@@ -1,0 +1,506 @@
+\documentclass{beamer}
+
+\input{commons}
+
+\hdr{2017-09-21}{MPI Continued}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Logistics}
+
+  \begin{itemize}
+  \item HW 2 is up, due Mar 11 (overlap).
+  \item HW 3 will go out start of next week.
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Previously on Parallel Programming}
+
+  Can write a lot of MPI code with 6 operations we've seen:
+  \begin{itemize}
+  \item {\tt MPI\_Init}
+  \item {\tt MPI\_Finalize}
+  \item {\tt MPI\_Comm\_size}
+  \item {\tt MPI\_Comm\_rank}
+  \item {\tt MPI\_Send}
+  \item {\tt MPI\_Recv}
+  \end{itemize}
+  ... but there are sometimes better ways.  Decide on
+  communication style using simple performance models.
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Communication performance}
+
+  \begin{itemize}
+  \item Basic info: {\em latency} and {\em bandwidth}
+  \item Simplest model: $t_{\mathrm{comm}} = \alpha + \beta M$
+  \item More realistic: distinguish CPU overhead from ``gap'' \\
+    ($\sim$ inverse bw)
+  \item Different networks have different parameters
+  \item Can tell a lot via a simple ping-pong experiment
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Intel MPI on totient}
+
+  \begin{itemize}
+  \item Two six-core chips per nodes, eight nodes
+  \item Heterogeneous network:
+    \begin{itemize}
+    \item Crossbar switch between cores (?)
+    \item Bus between chips
+    \item Gigabit ethernet between nodes
+    \end{itemize}
+  \item Default process layout (16 process example)
+    \begin{itemize}
+    \item Processes 0-5 on first chip, first node
+    \item Processes 6-11 on second chip, first node
+    \item Processes 12-17 on first chip, second node
+    \item Processes 18-23 on second chip, second node
+    \end{itemize}
+  \item Test ping-pong from 0 to 1, 11, and 23.
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Approximate $\alpha$-$\beta$ parameters (on chip)}
+
+  \begin{center}
+    \input{figs/ping/totient-01.tikz}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Approximate $\alpha$-$\beta$ parameters (cross-chip)}
+
+  \begin{center}
+    \input{figs/ping/totient-11.tikz}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Approximate $\alpha$-$\beta$ parameters (cross-node)}
+
+  \begin{center}
+    \input{figs/ping/totient-23.tikz}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Moral}
+
+  Not all links are created equal!
+  \begin{itemize}
+  \item Might handle with mixed paradigm 
+    \begin{itemize}
+    \item OpenMP on node, MPI across
+    \item Have to worry about thread-safety of MPI calls
+    \end{itemize}
+  \item Can handle purely within MPI
+  \item Can ignore the issue completely?
+  \end{itemize}
+  For today, we'll take the last approach.
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Reminder: basic send and recv}
+
+\begin{verbatim}
+MPI_Send(buf, count, datatype, 
+         dest, tag, comm);
+
+MPI_Recv(buf, count, datatype,
+         source, tag, comm, status);
+
+\end{verbatim}
+
+{\tt MPI\_Send} and {\tt MPI\_Recv} are {\em blocking}
+\begin{itemize}
+\item Send does not return until data is in system
+\item Recv does not return until data is ready
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Blocking and buffering}
+
+  \begin{center}
+    \input{figs/mpi-send-buf.tikz}
+  \end{center}  
+  Block until data ``in system'' --- maybe in a buffer?
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Blocking and buffering}
+
+  \begin{center}
+    \input{figs/mpi-send-nbuf.tikz}
+  \end{center}  
+  Alternative: don't copy, block until done.
+
+\end{frame}
+
+
+
+
+\begin{frame}
+  \frametitle{Problem 1: Potential deadlock}
+  
+  \begin{center}
+    \input{figs/mpi-send-dead.tikz}
+  \end{center}
+  Both processors wait to finish send before they can receive! \\
+  May not happen if lots of buffering on both sides.
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Solution 1: Alternating order}
+
+  \begin{center}
+    \input{figs/mpi-send-alt.tikz}
+  \end{center}
+  Could alternate who sends and who receives.
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Solution 2: Combined send/recv}
+
+  \begin{center}
+    \input{figs/mpi-sendrecv.tikz}
+  \end{center}
+  Common operations deserve explicit support!
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Combined sendrecv}
+
+\begin{verbatim}
+MPI_Sendrecv(sendbuf, sendcount, sendtype,
+             dest, sendtag, 
+             recvbuf, recvcount, recvtype, 
+             source, recvtag,
+             comm, status);
+\end{verbatim}
+Blocking operation, combines send and recv to avoid deadlock.
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Problem 2: Communication overhead}
+
+  \begin{center}
+    \input{figs/mpi-sendrecv-waiting.tikz}
+  \end{center}
+  Partial solution: nonblocking communication
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Blocking vs non-blocking communication}
+
+  \begin{itemize}
+  \item {\tt MPI\_Send} and {\tt MPI\_Recv} are {\em blocking}
+    \begin{itemize}
+    \item Send does not return until data is in system
+    \item Recv does not return until data is ready
+    \item Cons: possible deadlock, time wasted waiting
+    \end{itemize}
+  \item Why blocking?
+    \begin{itemize}
+    \item Overwrite buffer during send $\implies$ evil!
+    \item Read buffer before data ready $\implies$ evil!
+    \end{itemize}
+  \item Alternative: {\em nonblocking} communication
+    \begin{itemize}
+    \item Split into distinct initiation/completion phases
+    \item Initiate send/recv and promise not to touch buffer
+    \item Check later for operation completion
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Overlap communication and computation}
+
+  \begin{center}
+    \input{figs/mpi-isendrecv.tikz}
+  \end{center}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Nonblocking operations}
+
+Initiate message:
+\begin{verbatim}
+MPI_Isend(start, count, datatype, dest
+          tag, comm, request);
+MPI_Irecv(start, count, datatype, dest
+          tag, comm, request);
+\end{verbatim}
+
+\vspace{5mm}
+Wait for message completion:
+\begin{verbatim}
+MPI_Wait(request, status);
+\end{verbatim}
+
+\vspace{5mm}
+Test for message completion:
+\begin{verbatim}
+MPI_Test(request, status);
+\end{verbatim}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Multiple outstanding requests}
+
+  Sometimes useful to have multiple outstanding messages:
+\begin{verbatim}
+MPI_Waitall(count, requests, statuses);
+MPI_Waitany(count, requests, index, status);
+MPI_Waitsome(count, requests, indices, statuses);
+\end{verbatim}
+  Multiple versions of test as well.
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Other send/recv variants}
+
+  Other variants of {\tt MPI\_Send}
+  \begin{itemize}
+  \item {\tt MPI\_Ssend} (synchronous) -- do not complete until
+    receive has begun
+  \item {\tt MPI\_Bsend} (buffered) -- user provides buffer 
+    (via {\tt MPI\_Buffer\_attach})
+  \item {\tt MPI\_Rsend} (ready) -- user guarantees receive has
+    already been posted
+  \item Can combine modes (e.g. {\tt MPI\_Issend})
+  \end{itemize}
+  {\tt MPI\_Recv} receives anything.
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Another approach}
+
+  \begin{itemize}
+  \item Send/recv is one-to-one communication
+  \item An alternative is one-to-many (and vice-versa):
+    \begin{itemize}
+    \item {\em Broadcast} to distribute data from one process
+    \item {\em Reduce} to combine data from all processors
+    \item Operations are called by all processes in communicator
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Broadcast and reduce}
+
+\begin{verbatim}
+MPI_Bcast(buffer, count, datatype,
+          root, comm);
+MPI_Reduce(sendbuf, recvbuf, count, datatype,
+           op, root, comm);
+\end{verbatim}
+
+\begin{itemize}
+\item {\tt buffer} is copied from root to others
+\item {\tt recvbuf} receives result only at root
+\item {\tt op} $\in \{$ {\tt MPI\_MAX}, {\tt MPI\_SUM}, \ldots $\}$
+\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Example: basic Monte Carlo}
+
+\begin{verbatim}
+#include <stdio.h>
+#include <stdlib.h>
+#include <mpi.h>
+int main(int argc, char** argv) {
+    int nproc, myid, ntrials = atoi(argv[1]);
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &nproc);
+    MPI_Comm_rank(MPI_COMM_WORLD, &my_id);
+    MPI_Bcast(&ntrials, 1, MPI_INT, 
+              0, MPI_COMM_WORLD);
+    run_trials(myid, nproc, ntrials);
+    MPI_Finalize();
+    return 0;
+}
+\end{verbatim}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Example: basic Monte Carlo}
+
+Let {\tt sum[0]} = $\sum_i X_i$ and {\tt sum[1]} = $\sum_i X_i^2$.
+\begin{verbatim}
+void run_mc(int myid, int nproc, int ntrials) {
+    double sums[2] = {0,0};
+    double my_sums[2] = {0,0};
+    /* ... run ntrials local experiments ... */
+    MPI_Reduce(my_sums, sums, 2, MPI_DOUBLE, 
+               MPI_SUM, 0, MPI_COMM_WORLD);
+    if (myid == 0) {
+        int N = nproc*ntrials;
+        double EX = sums[0]/N;
+        double EX2 = sums[1]/N;
+        printf("Mean: %g; err: %g\n", 
+               EX, sqrt((EX*EX-EX2)/N));
+    }
+}
+\end{verbatim}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Collective operations}
+
+  \begin{itemize}
+  \item Involve all processes in communicator
+  \item Basic classes:
+    \begin{itemize}
+    \item Synchronization (e.g. barrier)
+    \item Data movement (e.g. broadcast)
+    \item Computation (e.g. reduce)
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Barrier}
+
+\begin{verbatim}
+MPI_Barrier(comm);
+\end{verbatim}
+
+Not much more to say.  Not needed that often.
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Broadcast}
+
+  \begin{center}
+    \input{figs/mpi-bcast.tikz}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Scatter/gather}
+
+  \begin{center}
+    \input{figs/mpi-gather.tikz}
+  \end{center}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Allgather}
+
+  \begin{center}
+    \input{figs/mpi-allgather.tikz}
+  \end{center}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Alltoall}
+
+  \begin{center}
+    \input{figs/mpi-alltoall.tikz}
+  \end{center}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Reduce}
+
+  \begin{center}
+    \input{figs/mpi-reduce.tikz}
+  \end{center}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Scan}
+
+  \begin{center}
+    \input{figs/mpi-scan.tikz}
+  \end{center}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{The kitchen sink}
+
+  \begin{itemize}
+  \item In addition to above, have vector variants ({\tt v} suffix),
+    more {\tt All} variants ({\tt Allreduce}), {\tt Reduce\_scatter}, ...
+  \item MPI3 adds one-sided communication (put/get)
+  \item MPI is {\em not} a small library!
+  \item But a small number of calls goes a long way
+    \begin{itemize}
+    \item {\tt Init}/{\tt Finalize}
+    \item {\tt Get\_comm\_rank}, {\tt Get\_comm\_size}
+    \item {\tt Send}/{\tt Recv} variants and {\tt Wait}
+    \item {\tt Allreduce}, {\tt Allgather}, {\tt Bcast}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\end{document}

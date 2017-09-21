@@ -1,0 +1,15 @@
+\begin{tikzpicture}
+  \draw[very thick,->] (0,6) -- (0,0);
+  \draw[very thick,->] (2,6) -- (2,0);
+  \node[left]  at (0,5)   {Start send};
+  \node[right] at (2,5)   {Start send};
+  \node[left]  at (0,4.5) {Start recv};
+  \node[right] at (2,4.5) {Start recv};
+  \node[left]  at (0,2.5) {End send};
+  \node[right] at (2,2.5) {End send};
+  \node[left]  at (0,2)   {End recv};
+  \node[right] at (2,2)   {End recv};
+  \draw[ultra thick,->] (0,5) -- (2,2.8);
+  \draw[ultra thick,->] (2,5) -- (0,2.8);
+  \node[right] at (2.5,3.7) {Compute, but don't touch buffers};
+\end{tikzpicture}

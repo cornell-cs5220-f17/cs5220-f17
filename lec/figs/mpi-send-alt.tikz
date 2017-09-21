@@ -1,0 +1,18 @@
+\begin{tikzpicture}
+  \draw[very thick]        (0,4) -- (0,3);
+  \draw[very thick,dashed] (0,3) -- (0,2);
+  \draw[very thick]        (0,2) -- (0,1);
+  \draw[very thick,dashed] (0,1) -- (0,0);
+  \draw[very thick,->]     (0,0) -- (0,-0.5);
+  \node[left] at (0,3) {Send};
+  \node[left] at (0,1) {Recv};
+  \draw[very thick]        (2,4) -- (2,3);
+  \draw[very thick,dashed] (2,3) -- (2,2);
+  \draw[very thick]        (2,2) -- (2,1);
+  \draw[very thick,dashed] (2,1) -- (2,0);
+  \draw[very thick,->]     (2,0) -- (2,-0.5);
+  \node[right] at (2,3) {Recv};
+  \node[right] at (2,1) {Send};
+  \draw[ultra thick,->] (0,3) -- (2,2);
+  \draw[ultra thick,->] (2,1) -- (0,0);
+\end{tikzpicture}
