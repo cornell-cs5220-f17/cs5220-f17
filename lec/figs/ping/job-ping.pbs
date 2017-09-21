@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Do ping pong on 24 cores spread across two nodes.
+
+#PBS -l nodes=2:ppn=12
+#PBS -l walltime=0:05:00
+#PBS -N ping-mpi
+#PBS -j oe
+
+# Change directories to where this script (and our executable) is.
+cd "$PBS_O_WORKDIR"
+
+module load intel
+mpirun -n 24 ./ping.x 1  > totient-01.txt
+mpirun -n 24 ./ping.x 11 > totient-11.txt
+mpirun -n 24 ./ping.x 23 > totient-23.txt
