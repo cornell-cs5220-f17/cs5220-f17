@@ -24,6 +24,7 @@ pdf/%.pdf: slides/%.tex
 clean:
 	rm -f pdf/*.aux pdf/*.log pdf/*.out
 	rm -f pdf/*.nav pdf/*.snm pdf/*.toc 
+	rm -f pdf/*.vrb
 
 distclean: clean
 	rm -f pdf/*.pdf
