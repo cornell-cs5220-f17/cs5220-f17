@@ -22,7 +22,8 @@
   desc: "HW4: Getting started with accelerators"
   due: 2017-10-03
 -
-  desc: "P2: Making waves"
+  desc: "P2: Mosh pits!"
+  url: https://github.com/cornell-cs5220-f17/moshpit
   due: 2017-10-05
 -
   desc: "Final proposal"
