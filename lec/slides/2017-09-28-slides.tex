@@ -1,0 +1,446 @@
+\documentclass{beamer}
+
+\input{commons}
+
+\hdr{2017-09-28}{Shared memory programming}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{OpenMP: Open spec for MultiProcessing}
+
+  \begin{itemize}
+  \item Standard API for multi-threaded code
+    \begin{itemize}
+    \item Only a spec --- multiple implementations
+    \item Lightweight syntax
+    \item C or Fortran (with appropriate compiler support)
+    \end{itemize}
+  \item High level:
+    \begin{itemize}
+    \item Preprocessor/compiler directives (80\%)
+    \item Library calls (19\%)
+    \item Environment variables (1\%)
+    \end{itemize}
+  \item Basic syntax: {\tt \#pragma omp {\it construct} [{\it clause} ...]}
+    \begin{itemize}
+    \item Usually affects structured block (one way in/out)
+    \item OK to have {\tt exit()} in such a block
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Last time}
+
+  \begin{itemize}
+  \item Environmental inquiries with {\tt omp\_get\_*} functions
+  \item Creating parallel regions with {\tt \#pragma omp parallel}
+  \item Annotations for variables (shared, private, reduction)
+  \item Synchronization via critical sections, atomic ops, barriers
+  \item Today: Work sharing, tasks, and some examples
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Work sharing}
+
+  {\em Work sharing} constructs split work across a team
+  \begin{itemize}
+  \item Parallel {\tt for}: split by loop iterations
+  \item {\tt sections}: non-iterative tasks
+  \item {\tt single}: only one thread executes (synchronized)
+  \item {\tt master}: master executes, others skip (no sync)
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Parallel iteration}
+
+  Idea: Map {\bf independent} iterations onto different threads
+\begin{lstlisting}
+  #pragma omp parallel for
+  for (int i = 0; i < N; ++i)
+      a[i] += b[i];
+
+  #pragma omp parallel
+  {
+      // Stuff can go here...
+      #pragma omp for    
+      for (int i = 0; i < N; ++i)
+          a[i] += b[i];
+  }
+\end{lstlisting}
+  Implicit barrier at end of loop (unless {\tt nowait} clause)
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Parallel iteration}
+
+  The iteration can also go across a higher-dim index set
+\begin{lstlisting}
+  #pragma omp parallel for collapse(2)    
+  for (int i = 0; i < N; ++i)
+    for (int j = 0; j < M; ++j)
+      a[i*M+j] = foo(i,j);
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Restrictions}
+
+  \begin{itemize}
+  \item {\tt for} loop must be in ``canonical form''
+    \begin{itemize}
+    \item Loop var is an integer, pointer, random access iterator (C++)
+    \item Test compares loop var to loop-invariant expression
+    \item Increment or decrement by a loop-invariant expression
+    \item No code between loop starts in {\tt collapse} set
+    \item Needed to split iteration space (maybe in advance)
+    \end{itemize}
+  \item Iterations should be independent
+    \begin{itemize}
+    \item Compiler may not stop you if you screw this up!
+    \end{itemize}
+  \item Iterations may be assigned out-of-order on one thread!
+    \begin{itemize}
+    \item Unless the loop is declared {\tt monotonic}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Reduction loops}
+
+  How might we parallelize something like this?
+  \begin{lstlisting}
+    double sum = 0;
+    for (int i = 0; i < N; ++i)
+        sum += big_hairy_computation(i);
+  \end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Reduction loops}
+
+  How might we parallelize something like this?
+  \begin{lstlisting}
+    double sum = 0;
+    #pragma omp parallel for reduction(+:sum)
+    for (int i = 0; i < N; ++i)
+        sum = big_hairy_computation(i);
+  \end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Ordered}
+
+  OK, what about something like this?
+  \begin{lstlisting}
+    for (int i = 0; i < N; ++i) {
+        int result = big_hairy_computation(i);
+        add_to_queue(q, result);
+    }
+  \end{lstlisting}
+  Work is {\em mostly} independent, but not wholly.
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Ordered}
+
+  Solution: {\tt ordered} directive in loop with {\tt ordered clause}
+  \begin{lstlisting}
+    #pragma omp parallel for ordered
+    for (int i = 0; i < N; ++i) {
+        int result = big_hairy_computation(i);
+        #pragma ordered
+        add_to_queue(q, result);
+    }
+  \end{lstlisting}
+  Ensures the {\tt ordered} code executes in loop order.
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{SIMD loops}
+
+  As of OpenMP 4.0:
+\begin{lstlisting}
+    #pragma omp parallel simd reduction(+:sum) aligned(a:64)
+    for (int i = 0; i < N; ++i) {
+        a[i] = b[i] * c[i];
+        sum = sum + a[i];
+    }
+\end{lstlisting}
+  Can also declare vectorized functions: \\
+\begin{lstlisting}
+    #pragma omp declare simd
+    float myfunc(float a, float b, float c)
+    {
+        return a*b + c;
+    }
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Other parallel work divisions}
+  
+  \begin{itemize}
+  \item {\tt sections}: like cobegin/coend
+  \item {\tt single}: do only in one thread (e.g. I/O)
+  \item {\tt master}: do only in master thread; others skip
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Sections}
+
+\begin{lstlisting}
+    #pragma omp parallel
+    {
+        #pragma omp sections nowait
+        {
+            #pragma omp section
+            do_something();
+
+            #pragma omp section
+            and_something_else();
+
+            #pragma omp section
+            and_this_too();
+            // No implicit barrier here
+        }
+        // Implicit barrier here
+    }
+\end{lstlisting}
+{\tt sections nowait} to kill barrier.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Task-based parallelism}
+
+  \begin{itemize}
+  \item Work-sharing so far is rather limited
+    \begin{itemize}
+    \item Work cannot be produced/consumed dynamically
+    \item Fine for data parallel array processing...
+    \item ... but what about tree walks and such?
+    \end{itemize}
+  \item Alternate approach (OpenMP 3.0+): Tasks
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Tasks}
+
+  Task involves:
+  \begin{itemize}
+  \item Task construct: {\tt task} directive plus structured block
+  \item Task: Task construct + data
+  \end{itemize}
+  Tasks are handled by run time, complete at barriers or {\tt taskwait}.
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Example: List traversal}
+
+\begin{lstlisting}
+#pragma omp parallel
+{
+    #pragma omp single nowait
+    {
+        for (link_t* link = head; link; link = link->next)
+            #pragma omp task firstprivate(link)
+            process(link);
+    }
+    // Implicit barrier
+}
+\end{lstlisting}
+One thread generates tasks, others execute them.
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Example: Tree traversal}
+
+\begin{lstlisting}
+int tree_max(node_t* n)
+{
+    int lmax, rmax;
+    if (n->is_leaf)
+        return n->value;
+    
+    #pragma omp task shared(lmax)
+        lmax = tree_max(n->l);
+    #pragma omp task shared(rmax)
+        rmax = tree_max(n->l);
+    #pragma omp taskwait
+
+    return max(lmax, rmax);
+}
+\end{lstlisting}
+The {\tt taskwait} waits for all child tasks.
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Task dependencies}
+
+  What happens if one task produces what another needs?
+\begin{lstlisting}
+    #pragma omp task depend(out:x)
+    x = foo();
+    #pragma omp task depend(in:x)
+    y = bar(x);
+\end{lstlisting}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Some examples (at board)}
+
+  What are different ways to organize these:
+  \begin{itemize}
+  \item Dot product?
+  \item Monte Carlo computation with adaptive termination?
+  \item Wave equation time stepper?
+  \end{itemize}
+\end{frame}
+
+\end{document}
+
+
+
+
+\begin{frame}[fragile]
+  \frametitle{Toy problem: actual code (OpenMP)}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Toy problem: actual code (OpenMP)}
+
+  A practical aside...
+  \begin{itemize}
+  \item GCC 4.3+ has OpenMP support by default
+    \begin{itemize}
+    \item Earlier versions may support (e.g. latest Xcode {\tt gcc-4.2})
+    \item GCC 4.4 (prerelease) for my laptop has buggy support!
+    \item {\tt -O3 -fopenmp} == death of an afternoon
+    \end{itemize}
+  \item Need {\tt -fopenmp} for both compile and link lines
+\begin{lstlisting}
+gcc -c -fopenmp foo.c
+gcc -o -fopenmp mycode.x foo.o
+\end{lstlisting}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Parallel loops}
+
+\begin{center}
+\includegraphics[width=\textwidth]{omploop.pdf}
+\end{center}
+
+\begin{itemize}
+\item
+  Independent loop body? At least order doesn't matter%
+\footnote{If order matters, there's an {\tt ordered} modifier.}.
+\item
+  Partition index space among threads
+\item 
+  Implicit barrier at end (except with {\tt nowait})
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Parallel loops}
+
+\begin{lstlisting}
+/* Compute dot of x and y of length n */
+int i, tid;
+double my_dot, dot = 0;
+#pragma omp parallel \
+        shared(dot,x,y,n) \
+        private(i,my_dot)
+{
+  tid = omp_get_thread_num();
+  my_dot = 0;
+ 
+  #pragma omp for
+  for (i = 0; i < n; ++i)
+    my_dot += x[i]*y[i];
+
+  #pragma omp critical
+  dot += my_dot;
+}
+\end{lstlisting}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Parallel loops}
+
+\begin{lstlisting}
+/* Compute dot of x and y of length n */
+int i, tid;
+double dot = 0;
+#pragma omp parallel \
+        shared(x,y,n) \
+        private(i) \
+        reduction(+:dot)
+{
+  #pragma omp for
+  for (i = 0; i < n; ++i)
+    dot += x[i]*y[i];
+}
+\end{lstlisting}
+
+
+\begin{frame}
+  \frametitle{Parallel loop scheduling}
+  
+  Partition index space different ways:
+  \begin{itemize}
+  \item {\tt static[(chunk)]}: decide at start of loop;
+    default chunk is {\tt n/nthreads}.  Lowest overhead,
+    most potential load imbalance.
+  \item {\tt dynamic[(chunk)]}: each thread takes {\tt chunk}
+    iterations when it has time; default {\tt chunk} is 1.
+    Higher overhead, but automatically balances load.
+  \item {\tt guided}: take chunks of size unassigned iterations/threads;
+    chunks get smaller toward end of loop.  Somewhere between
+    {\tt static} and {\tt dynamic}.
+  \item {\tt auto}: up to the system!
+  \end{itemize}
+  Default behavior is implementation-dependent.
+
+\end{frame}
+
+
+\end{document}

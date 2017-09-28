@@ -595,7 +595,8 @@ double s[MAX_THREADS];  // default shared
   \end{center}
 
 \begin{lstlisting}
-#pragma omp parallel {
+#pragma omp parallel
+{
   ...
   #pragma omp critical my_data_cs
   {
