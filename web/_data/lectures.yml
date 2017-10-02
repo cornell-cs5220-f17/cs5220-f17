@@ -88,7 +88,6 @@
 -
   date: 2017-10-05
   info: Heterogeneity and accelerators
-  hw: P2 due
 #
 # ==================
 # Week 8
@@ -100,6 +99,7 @@
   date: 2017-10-12
   info: VMs, containers, and clouds
   hw: P3 out
+  hw: P2 due
 #
 # ==================
 # Week 9
