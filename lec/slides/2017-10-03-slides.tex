@@ -1,0 +1,564 @@
+\documentclass{beamer}
+
+\input{commons}
+
+\hdr{2017-10-03}{Heterogeneity and accelerators}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Reminder: Totient cluster structure}
+
+  Consider:
+  \begin{itemize}
+  \item Each core has vector parallelism
+  \item Each chip has six cores, shares memory with others
+  \item Each box has two chips, shares memory
+  \item Each box has two \alert{Xeon Phi accelerators}
+  \item Eight instructional nodes, communicate via Ethernet
+  \end{itemize}
+  Common layout (more nodes and better networks at high end)
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Accelerator devices}
+
+  \begin{itemize}
+  \item NVidia GPUs
+  \item Intel Xeon Phi (aka MIC)
+  \item AMD Radeon Pro
+  \item Google Tensor Processing Units (TPUs)
+  \item Arria (Intel) and Altera FPGAs
+  \item Lake Crest, Knights Mill, etc?
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{General accelerator scheme}
+
+  \begin{quote}
+    If you were plowing a field, which would you rather use: Two
+    strong oxen or 1024 chickens? \\
+    \hfill --- Seymour Cray
+  \end{quote}
+  \begin{itemize}
+  \item Host computer
+    \begin{itemize}
+    \item General purpose
+    \item Usually multi-core
+    \end{itemize}
+  \item Accelerator
+    \begin{itemize}
+    \item Specialized for particular workloads
+    \item Often many specialized cores (many-core)
+    \item May have a non-x86 ISA, needs different compilers
+    \item More ``exotic'' HW support (half precision, wide vecs, etc)
+    \item Often has {\em independent memory}
+    \end{itemize}
+  \end{itemize}
+    
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Some historical perspective}
+
+  \begin{itemize}
+  \item 1970s -- early 1990s: vector supercomputers
+  \item But games pay more than science!
+    \begin{itemize}
+    \item Mid-late 90s: SIMD vectors in CPUs (for graphics)
+    \item Also 90s: Special-purpose GPUs
+    \item Early 2000s: Programmable GPUs, rise of GPGPU
+    \end{itemize}
+  \item And the pendulum swings
+    \begin{itemize}
+    \item 2007: NVidia Tesla + first version of NVidia CUDA
+    \item 2010: Knight's Ferry
+    \item 2012-13: Knight's Landing (first commercial Xeon Phi)
+    \item Today: mostly NVidia, Intel trailing, AMD a ways back
+      \begin{itemize}
+      \item NB: Knight's Landing Xeon Phi can operate independently!
+      \end{itemize}
+    \end{itemize}
+  \item More recent accelerators target deep learning
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Accelerator options}
+
+  \begin{itemize}
+  \item NVidia GPUs
+    \begin{itemize}
+    \item Amazon EC2, Google GCE, MS Azure
+    \item Summit (ORNL)
+    \item Sierra (LLNL)
+    \end{itemize}
+  \item Intel Xeon Phi
+    \begin{itemize}
+    \item Totient cluster!
+    \item Tianhe-2
+    \item TACC Stampede
+    \item Aurora (Argonne)
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Same old song...}
+
+  \begin{itemize}
+  \item For performance, we need:
+    \begin{itemize}
+    \item Stern warnings against magical thinking
+    \item Enough about HW to reason about performance gotchas
+    \item Careful attention to memory issues
+    \item Pointers to appropriate programming models
+    \end{itemize}
+  \item What's different?
+    \begin{itemize}
+    \item Many more cores/threads
+    \item Lots of data parallelism
+    \item New? NVidia lore harkens to Cray vector days!
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Programming models}
+
+  \begin{itemize}
+  \item \href{https://developer.nvidia.com/gpu-accelerated-libraries}{Call
+      a library}!
+    \begin{itemize}
+    \item This is often the fastest way to faster code
+    \item Remember trying to beat BLAS in P1?
+    \end{itemize}
+  \item CUDA (NVidia only)
+  \item OpenCL (clunkier, works with more)
+  \item OpenACC
+  \item OpenMP
+  \item Novel languages (Simit, Julia, ...)
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Totient Phi}
+
+  \href{https://ark.intel.com/products/71992/Intel-Xeon-Phi-Coprocessor-5110P-8GB-1_053-GHz-60-core}{Xeon Phi 5110P}
+  \begin{itemize}
+  \item Came out late 2012 (now end-of-life)
+  \item 60 cores (modified Pentium)
+  \item 4 way hyperthreading / 240 hardware threads
+  \item AVX512 support (wide vector units)
+  \item Base frequency of 1.05 GHz
+  \item Ring network on chip
+  \item 32K L1 data/instruction cache per core
+  \item 30 MB L2 (512K/core) and 8 GB RAM
+  \end{itemize}
+  Program with OpenMP + directives, OpenCL, Cilk/Cilk+, libraries
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Phi programming}
+
+  \begin{itemize}
+  \item Knight's Landing -- maybe just ssh in
+  \item Offload mode slides adapted from
+    \href{https://portal.tacc.utexas.edu/documents/13601/901837/offload_slides_DJ2013-3.pdf}{TACC
+      talk}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Easy perf (Automatic Offloading)}
+
+  Supposing {\tt foo} uses BLAS for performance:
+\begin{lstlisting}
+  # In Makefile
+  icc -qopenmp -mkl foo.c -o foo.x
+
+  # In PBS script
+  export MKL_MIC_ENABLE=1
+  export OMP_NUM_THREADS=12
+  export MIC_OMP_NUM_THREADS=240
+  ./foo.x
+\end{lstlisting}
+  Actually divides work across host and MIC
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Compiler-assisted offload: Hello World}
+
+\begin{lstlisting}
+  #include <stdio.h>
+  #include <omp.h>
+
+  int main()
+  {
+      int nprocs;
+
+      #pragma offload target(mic)
+      nprocs = omp_get_num_procs();    // On MIC
+
+      printf("nprocs = %d\n", nprocs); // On host
+      return 0;
+  }
+\end{lstlisting}
+Can have OpenMP on either host or MIC.
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Compiler-assisted offload: Hello World}
+
+\begin{lstlisting}
+  #include <stdio.h>
+  #include <omp.h>
+
+  int main()
+  {
+      int nprocs;
+
+      #pragma offload target(mic:0)
+      nprocs = omp_get_num_procs();    // On MIC 0 (vs MIC 1)
+
+      printf("nprocs = %d\n", nprocs); // On host
+      return 0;
+  }
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Compiler-assisted offload}
+
+  Always generate host code, generate code for MIC in
+  \begin{itemize}
+  \item {\tt offload} regions
+  \item Functions marked with {\tt \_\_declspec(target(mic))}
+  \end{itemize}
+  Can also mark global variables with {\tt \_\_declspec(target(mic))}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Offload off-stage}
+
+  Execution behind the scenes:
+  \begin{itemize}
+  \item Detect MICs
+  \item Allocate/associate MIC memory
+  \item Transfer data to MIC
+  \item Execute on MIC
+  \item Transfer data from MIC
+  \item Deallocate on MIC
+  \end{itemize}
+  Can control with clauses
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Data transfer}
+
+  \begin{itemize}
+  \item {\tt in}, {\tt out}, {\tt inout} clauses: declare how
+    variables transfer
+  \item {\tt alloc\_if}, {\tt free\_if}: manage allocation for associated dynamic
+    arrays on host and accelerator
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Compiler-assisted offload}
+
+\begin{lstlisting}
+  __declspec(target(mic))
+  void something_fancy(int n, double* x) {...}
+  
+  int main()
+  {
+      int n = 100;
+      double* x = (double*) memalign(64, n*sizeof(double));
+      #pragma offload mic \
+      inout(x : length(n) alloc_if(1) free_if(1))
+      something_fancy(n, x);
+      // Do something with x on host
+      free(x);
+      return 0;
+  }
+\end{lstlisting}  
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Asynchronous execution}
+
+\begin{lstlisting}
+  int n = 123;
+  #pragma offload target(mic) signal(&n)
+  act_very_slowly();
+  do_something_on_host();
+  #pragma mic offload_wait target(mic) wait(&n)
+\end{lstlisting}  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Desiderata}
+
+  \begin{itemize}
+  \item Lots of parallel work
+    \begin{itemize}
+    \item Vectorized, OpenMP, etc -- both host and MIC
+    \end{itemize}
+  \item Not too much data transfer
+    \begin{itemize}
+    \item It's expensive!
+    \item Re-use data transfers to MIC if possible
+    \end{itemize}
+  \end{itemize}
+  Writing ``modern'' code tends to be good for both sides...
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{What about GPUs?}
+
+  Lots of good references out there:
+  \begin{itemize}
+  \item
+    \href{http://proquest.safaribooksonline.com/book/software-engineering-and-development/9780124159921}{Programming
+      Massively Parallel Processors (Kirk and Hwu)} -- available
+    online via Cornell library subscription (Safari)
+  \item
+    \href{http://docs.nvidia.com/cuda/pdf/CUDA_C_Programming_Guide.pdf}{CUDA
+      C Programming Guide}
+  \item
+    \href{http://docs.nvidia.com/cuda/pdf/CUDA_C_Best_Practices_Guide.pdf}{CUDA
+      C Best Practices Guide}
+  \item
+    \href{http://people.maths.ox.ac.uk/gilesm/cuda/}{Oxford CUDA short course}
+  \end{itemize}
+  Lots of details!  But basic ideas constant: regular computation,
+  expose parallelism, exploit locality, minimize memory traffic.
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Basic architecture (NVidia GPUs)}
+
+  \begin{itemize}
+  \item Array of Streaming Multiprocessors (SMs)
+  \item Single Instruction Multiple Thread (SIMT)
+    \begin{itemize}
+    \item Operate with {\em warp} of 32 threads
+    \item Each thread execs same instructions at once
+    \item Some may be inactive (for conditional exec)
+    \end{itemize}
+  \item Exec a warp at a time (want {\em lots} of parallel work!)
+  \item Organize threads into logical grids of blocks
+  \item Several types of device memory
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{How to program?}
+
+  Call a library!
+  \begin{itemize}
+  \item \href{http://icl.cs.utk.edu/magma/}{MAGMA} for doing NLA
+  \item cuBLAS, cuFFT, etc otherwise
+  \end{itemize}
+  But sometimes you need a little lower level.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{NVidia CUDA}
+
+  Compute Unified Device Architecture.  Three basic ideas:
+  \begin{itemize}
+  \item Hierarchy of thread groups
+  \item Shared memories
+  \item Barrier synchronization
+  \end{itemize}
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Threads and kernels}
+
+  Idea:
+  \begin{itemize}
+  \item Define {\em kernel} that runs on GPU
+  \item Exec kernel on $N$ parallel threads
+  \item Different work according to thread index
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Hello world}
+
+\begin{lstlisting}
+__global__ 
+void vecAdd(float* A, float* B, float* C) {
+    int i = threadIdx.x;
+    C[i] = A[i] + B[i];
+}
+
+int main()
+{
+    // ...
+    // Execute with N threads
+    vecAdd<<1,N>>(A, B, C);
+    // ...
+}
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Hello world}
+
+  \begin{itemize}
+  \item Declare {\tt \_\_global\_\_} to run on device
+    \begin{itemize}
+    \item {\tt \_\_device\_\_} for call/exec on device
+    \item {\tt \_\_host\_\_} for all on host (or don't annotate)
+    \end{itemize}
+  \item Call is {\tt kernel<<nBlk,nThread>>(args)}
+  \item Blocks/threads in 1-3D logical index spaces
+    \begin{itemize}
+    \item Threads form blocks, blocks form grids
+    \item IDs are {\tt blockIdx} and {\tt threadIdx} structs
+    \item {\tt gridDim} gives blocks/grid
+    \item {\tt blockDim} gives threads/block
+    \item Each struct has {\tt x}, {\tt y}, {\tt z} fields
+    \item Under the hood: 1D space
+    \item At most 1024 threads per block
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+
+\begin{frame}[fragile]
+  \frametitle{Hello world}
+
+\begin{lstlisting}
+__global__ 
+void vecAdd(float* A, float* B, float* C, int N) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    if (i < N) C[i] = A[i] + B[i];
+}
+
+int main()
+{
+    // ...
+    // Execute with N threads
+    vecAdd<<1,N>>(A, B, C, N);
+    // ...
+}
+\end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Where is the data?}
+
+  Explicitly manage device data and transfers:
+\begin{lstlisting}
+    cudaMalloc((void**)&d_A, size);
+    cudaMemcpy(d_A, h_A, size, cudaMemcpyHostToDevice);
+    // Do something on device
+    cudaMemcpy(h_C, d_C, size, cudaMemcpyDeviceToHost);
+    cudaFree(d_A);
+\end{lstlisting}
+  ... and we have to malloc/free corresponding device data.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Shared memory and barriers}
+  
+  Device has several types of memory
+  \begin{itemize}
+  \item Per-thread: registers, local memory
+  \item Per-block: shared memory ({\tt \_\_shared\_\_})
+  \item Per-grid: global memory, constant memory
+  \end{itemize}
+  Synchronize access to shared/global memory with {\tt
+    \_\_synchthreads()} (barrier)
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{And so forth}
+
+  \begin{itemize}
+  \item Other memory types (texture, surface)
+  \item Asynchronous execution
+  \item Streams and events
+  \item ... and the programming guide is 300 pages!
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{So now what?}
+
+  So far we have seen
+  \begin{itemize}
+  \item Two accelerator HW platforms
+  \item Two programming models
+  \item Same old concerns with lots of new details
+  \end{itemize}
+  Should be asking
+  \begin{itemize}
+  \item Is there a better way than low-level mucking about?
+  \item What if I want to use this in a larger code?
+  \end{itemize}
+  Both great questions!  Let's pick them up next time.
+  
+\end{frame}
+
+% Evolution of compute hardware and the ``zero billion dollar a year''
+% Different words, same tune!  And many of the same words.  Basic
+%   pattern remains the same: enough about the HW to reason about
+%   performance gotchas (with particular reference to memory);
+%   issues of how to find parallelism, watch for memory bottlenecks,
+%   etc.  Use libraries when possible, and be appropriately skeptical
+%   of black magic, unfair comparisons, etc.
+% Some history
+% HW: NVidia and Intel, lots of others.  Multi-core vs manycore (and
+%   1024 chickens)
+% Cray and ``everything old is new''
+% Programming models: CUDA, OpenCL, OpenACC, OpenMP, C++AMP,
+%    libraries, novel languages (e.g. Simit, explicit Julia support)
+% Mixed model programming
+% Other places to learn?  Pointers to books, slide decks, courses,
+%   etc.
+
+
+\end{document}
