@@ -1,0 +1,469 @@
+\documentclass{beamer}
+
+\input{commons}
+
+\hdr{2017-10-12}{VMs, containers, and clouds}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% Book pointer
+% https://cornell-ssw.github.io/meetings/2016-10-31#google-cloud-platform
+
+% Overview: What is a cloud?  Providers, use cases
+% Virtualized vs bare metal
+% Containerization
+% 
+
+
+\begin{frame}
+  \frametitle{Cloud vs~HPC}
+
+  Is the cloud becoming a supercomputer?
+  \begin{itemize}
+  \item What does this even mean?
+  \item Cloud $\approx$ resources for rent
+    \begin{itemize}
+    \item Compute cycles and raw bits, or something higher level?
+    \item Bare metal or virtual machines?
+    \item On demand, behind a queue?
+    \end{itemize}
+  \item Typically engineered for {\em different loads}
+    \begin{itemize}
+    \item Cloud: high utilization, services
+    \item Super: a few users, big programs
+    \end{itemize}
+  \item But the picture is complicated...
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Choosing a platform}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Questions to ask}
+
+  \begin{itemize}
+  \item What type of workload do I have?
+    \begin{itemize}
+    \item Big memory but modest core count?
+    \item Embarassingly parallel?
+    \item GPU friendly?
+    \end{itemize}
+  \item How much data?  Data transfer is not always free!
+  \item How will I interact with the system?  SSH alone?  GUIs?  Web?
+  \item What about licensed software?
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Standard options beyond the laptop}
+
+  \begin{itemize}
+  \item Local clusters and servers
+  \item Public cloud VMs (Amazon, Google, Azure)
+    \begin{itemize}
+    \item Can pay money or write proposal for credits
+    \end{itemize}
+  \item Public cloud bare metal (Nimbix, Sabalcore, PoD)
+    \begin{itemize}
+    \item Good if bare-metal parallel performance an issue
+    \item Might want to compare to
+      \href{https://www.cac.cornell.edu/}{CAC offerings}
+    \end{itemize}
+  \item Supercomputer (\href{https://www.xsede.org/}{XSEDE},
+    \href{http://science.energy.gov/ascr/facilities/accessing-ascr-facilities/}{DOE})
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Topics du jour}
+
+  \begin{itemize}
+  \item Virtualization: supporting high utilization
+  \item Containers: isolation without performance hits
+  \item XaaS: the prevailing buzzword soup
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Virtualization}
+
+  \begin{quote}
+    All problems in computer science can be solved by another level of
+    indirection. \\
+    \hfill -- David Wheeler
+  \end{quote}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{From physical to logical}
+
+  \begin{itemize}
+  \item OS: Share HW resources between processes
+    \begin{itemize}
+    \item Provides processes with HW abstraction
+    \end{itemize}
+  \item Hypervisor: Share HW resources between virtual machiens
+    \begin{itemize}
+    \item Each VM has independent OS, utilities, libraries
+    \item Sharing HW across VMs improves utilization
+    \item Separating VM from HW improves portability
+    \end{itemize}
+  \end{itemize}
+  Sharing HW across VMs is key to Amazon, Azure, Google clouds.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{The Virtual Machine: CPU + memory}
+
+  \begin{itemize}
+  \item Sharing across processes with same OS is old
+    \begin{itemize}
+    \item OS-supported pre-emptive multi-tasking
+    \item Virtual memory abstractions with HW support
+      \begin{itemize}
+      \item Page tables, TLB
+      \end{itemize}
+    \end{itemize}
+  \item Sharing HW between systems is newer
+    \begin{itemize}
+    \item Today: CPU virtualization with near zero overhead
+      \begin{itemize}
+      \item Really?  Cache effects may be an issue
+      \end{itemize}
+    \item Backed by extended virtual memory support
+      \begin{itemize}
+      \item DMA remapping, extended page tables
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{The Virtual Machine: Storage}
+
+  \begin{itemize}
+  \item Network attached storage around for a long time
+  \item Modern clouds provide a blizzard of storage options
+  \item SSD-enabled machines increasingly common
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{The Virtual Machine: Network}
+
+  \begin{itemize}
+  \item Hard to get full-speed access via VM!
+    \begin{itemize}
+    \item Issue: Sharing peripherals with direct memory access?
+    \item Issue: Force to go through TCP, or go lower?
+    \end{itemize}
+  \item HW support is improving (e.g.~SR-IOV standards)
+  \item Still a potential pain point
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{The Virtual Machine: Accelerators?}
+
+  I don't understand how these would be virtualized! \\
+  \href{https://aws.amazon.com/ec2/elastic-gpus/}{But I know people are doing it.}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Hypervisor options}
+
+  \begin{itemize}
+  \item Type 1 (bare metal) vs type 2 (run guest OS atop host OS)
+    \begin{itemize}
+    \item Not always a clear distinction (KVM somewhere between?)
+    \item You may have used Type 2 (Parallels, VirtualBox, etc)
+    \end{itemize}
+  \item Common large-scale choices
+    \begin{itemize}
+    \item KVM (used by Google cloud)
+    \item Xen (used by Amazon cloud)
+    \item HyperV (used by Azure)
+    \item vmWare (used in many commercial clouds)
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Performance implications: the good}
+
+  VMs perform well for many workloads:
+  \begin{itemize}
+  \item Hypervisor CPU overheads pretty low (absent sharing)
+  \item
+    \href{http://h20195.www2.hpe.com/V2/getpdf.aspx/4AA6-2761ENW.pdf}{May
+      be within a few percent on LINPACK loads}
+  \item
+    \href{http://blogs.vmware.com/performance/tag/linpack}{VMWare
+      agrees with this}
+  \item Virtual memory (mature tech) extending appropriately
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Performance implications: the bad}
+
+  Virtualization does have performance impacts:
+  \begin{itemize}
+  \item Contention between VMs has nontrivial overheads
+  \item Untuned VMs
+    \href{http://blog.pierreroudier.net/wp-content/uploads/2015/08/rc25482.pdf}{may
+      miss important memory features}
+  \item Mismatched scheduling of VMs can slow multi-CPU runs
+  \item I/O virtualization is still costly
+  \end{itemize}
+  Does it make sense to do big PDE solves on VMs yet?  Maybe not, but...
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Performance implications}
+
+  VM performance is a {\em fast} moving target:
+  \begin{itemize}
+  \item VMs are important for isolation and utilization
+    \begin{itemize}
+    \item Important for economics of rented infrastructure
+    \end{itemize}
+  \item Economic importance drives a lot
+    \begin{itemize}
+    \item Big topic of academic systems research
+    \item Lots of industry and open source R\&D (HW and SW)
+    \end{itemize}
+  \end{itemize}
+  Scientific HPC {\em will} ultimately benefit, even if not the driver.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{VM performance punchline}
+
+  \begin{itemize}
+  \item VM computing in clouds will not give ``bare metal''
+    performance
+    \begin{itemize}
+    \item If you have
+      \href{https://cloudplatform.googleblog.com/2017/10/new-compute-engine-machine-types.html}{96
+        vCPUs and 624 GB RAM}, maybe you can afford a couple percent hit?
+    \end{itemize}
+  \item Try it before you knock it
+    \begin{itemize}
+    \item Much depends on workload
+    \item And remember: performance comparisons are hard!
+    \item And the picture will change next year anyhow
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Containers}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Why virtualize?}
+
+  A not-atypical coding day:
+  \begin{enumerate}
+  \item Build code (four languages, many libraries)
+  \item Doesn't work; install missing library
+  \item Requires different version of a dependency
+  \item Install new version, breaking different package
+  \item Swear, coffee, go to 1
+  \end{enumerate}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Application isolation}
+
+  \begin{itemize}
+  \item Desiderata: Codes operate independently on same HW
+    \begin{itemize}
+    \item Isolated HW: memory spaces, processes, etc (OS handles)
+    \item Isolated SW: dependencies, dynamic libs, etc (OS shrugs)
+    \end{itemize}
+  \item Many tools for isolation
+    \begin{itemize}
+    \item VM: strong isolation, heavy weight
+    \item Python virtualenv: language level, partial isolation
+    \item Conda env, modules: still imperfect isolation
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Application portability}
+
+  \begin{itemize}
+  \item Desiderata: develop on my laptop, run elsewhere
+    \begin{itemize}
+    \item Even if ``elsewhere'' refers to a different Linux distro!
+    \end{itemize}
+  \item What about autoconf, CMake, etc?
+    \begin{itemize}
+    \item Great at finding {\em some} library that satisfies deps
+    \item Maintenance woes: bug on a system I can't reproduce
+    \end{itemize}
+  \item Solution: Package code and deps in VM?
+    \begin{itemize}
+    \item But what about performance, image size?
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Containers}
+
+  \begin{itemize}
+  \item Instead of virtualizing HW, virtualize OS
+  \item Container image includes library deps, config files, etc
+  \item Running container has own
+    \begin{itemize}
+    \item Root filesystem (no sharing libs across containers)
+    \item Process space, IPC, TPC sockets
+    \end{itemize}
+  \item Can run on VM or on bare metal
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Container landscape}
+
+  \begin{itemize}
+  \item \href{https://www.docker.com/}{Docker} dominates
+  \item \href{https://coreos.com/rkt/}{rkt} is an up-and-coming alternative
+  \item Several others (see
+    \href{https://coreos.com/rkt/docs/latest/rkt-vs-other-projects.html}{this
+      comparison})
+  \item Multiple efforts on containers for HPC
+    \begin{itemize}
+    \item \href{https://www.nersc.gov/research-and-development/user-defined-images/}{Shifter}: Docker-like user-defined images for HPC systems
+    \item \href{http://singularity.lbl.gov/}{Singularity}: Competing system
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Containers vs VMs?}
+
+  \begin{itemize}
+    \item VMs: Different OS on same HW
+      \begin{itemize}
+      \item What if I want Windows + Linux on one machine?
+      \item Good reason for running VMs locally, too!
+      \end{itemize}
+    \item VMs: Strong isolation between jobs sharing HW (security)
+      \begin{itemize}
+      \item OS is supposed to isolate jobs
+      \item What about shared OS, one malicious user with root kit?
+      \item Hypervisor has smaller attack surface
+      \end{itemize}
+    \item Containers: one OS, weaker isolation, but lower overhead
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{XaaS and the cloud}
+\end{frame}
+
+\begin{frame}
+  \frametitle{IaaS: Infrastructure}
+
+  \begin{itemize}
+  \item Low-level compute for rent
+    \begin{itemize}
+    \item Computers (VMs or bare metal)
+    \item Network (you pay for BW)
+    \item Storage (virtual disks, storage buckets, DBs)
+    \end{itemize}
+  \item Focus of the discussion so far
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{PaaS: Platform}
+
+  \begin{itemize}
+  \item Programmable environments above raw machines
+  \item Example: Wakari and other Python NB hosts
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{SaaS: Software}
+
+  \begin{itemize}
+  \item Relatively fixed SW package
+  \item Example: GMail
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The big three}
+
+  \begin{itemize}
+  \item Amazon Web Services (AWS): first mover
+  \item Google Cloud Platform: better prices?
+  \item Microsoft Azure: only one with Infiniband
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The many others: HPC IaaS}
+
+  \begin{itemize}
+  \item \href{https://www.cac.cornell.edu/services/cloudservices.aspx}{RedCloud}: Cornell local
+  \item \href{https://www.nimbix.net/}{Nimbix}
+  \item \href{http://www.sabalcore.com/}{Sabalcore}
+  \item \href{https://pod.penguincomputing.com/hpc_on_demand}{Penguin-on-Demand}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{The many others: HPC PaaS/SaaS}
+
+  \begin{itemize}
+  \item \href{http://www.rescale.com/}{Rescale}: Turn-key HPC and simulations
+  \item \href{https://pod.penguincomputing.com/}{Penguin On Demand}: Bare-metal IaaS or PaaS
+  \item
+    \href{https://www.mathworks.com/products/parallel-computing/matlab-parallel-cloud/}{MATLAB
+      Cloud}: One-stop shopping for parallel MATLAB cores
+  \item \href{https://cyclecomputing.com/}{Cycle computing}: PaaS on clouds (e.g. Google, Amazon, Azure)
+  \item \href{https://www.simscale.com/}{SimScale}: Simulation from your browser
+  \item \href{https://www.totalcae.com/}{TotalCAE}: Turn-key private or public cloud FEA/CFD
+  \item \href{https://www.cpu-24-7.com/}{CPU 24/7}: CAE as a Service
+  \end{itemize}
+\end{frame}
+
+
+\end{document}
