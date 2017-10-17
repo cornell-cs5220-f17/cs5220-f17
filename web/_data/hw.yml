@@ -33,7 +33,8 @@
   desc: "HW5: Building on BLAS"
   due: 2017-10-24
 -
-  desc: "P3"
+  desc: "P3: Shallow water in CUDA"
+  url: https://github.com/cornell-cs5220-f17/water-cuda
   due: 2017-11-02
 -
   desc: "Final check-in"
