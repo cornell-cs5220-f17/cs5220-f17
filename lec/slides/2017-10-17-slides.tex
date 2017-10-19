@@ -1,0 +1,889 @@
+% FIXME: Swap out diagrams
+\documentclass{beamer}
+
+\input{commons}
+
+\hdr{2017-10-17}{Dense Linear Algebra}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Where we are}
+
+  \begin{itemize}
+  \item This week: {\em dense} linear algebra
+  \item Next week: {\em sparse} linear algebra
+  \end{itemize}
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Numerical linear algebra in a nutshell}
+
+  \begin{itemize}
+  \item Basic problems
+    \begin{itemize}
+    \item Linear systems: $Ax = b$
+    \item Least squares: minimize $\|Ax-b\|_2^2$
+    \item Eigenvalues: $Ax = \lambda x$
+    \end{itemize}
+  \item Basic paradigm: matrix factorization
+    \begin{itemize}
+    \item $A = LU$, $A = LL^T$
+    \item $A = QR$
+    \item $A = V \Lambda V^{-1}$, $A = Q T Q^T$
+    \item $A = U \Sigma V^T$
+    \end{itemize}
+  \item Factorization $\equiv$ switch to basis that makes problem easy
+  \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Numerical linear algebra in a nutshell}
+
+  Two flavors: dense and sparse
+  \begin{itemize}
+  \item Dense == common structures, no complicated indexing
+    \begin{itemize}
+    \item General dense (all entries nonzero)
+    \item Banded (zero below/above some diagonal)
+    \item Symmetric/Hermitian
+    \item Standard, robust algorithms (LAPACK)
+    \end{itemize}
+  \item Sparse == stuff not stored in dense form!
+    \begin{itemize}
+    \item Maybe few nonzeros (e.g. compressed sparse row formats)
+    \item May be implicit (e.g. via finite differencing)
+    \item May be ``dense'', but with compact repn (e.g. via FFT)
+    \item Most algorithms are iterative; wider variety, more subtle
+    \item Build on dense ideas
+    \end{itemize}
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{History}
+
+  BLAS 1 (1973--1977)
+  \begin{itemize}
+  \item Standard library of 15 ops (mostly) on vectors
+    \begin{itemize}
+    \item Up to four versions of each: S/D/C/Z
+    \item Example: DAXPY
+      \begin{itemize}
+      \item Double precision (real)
+      \item Computes $Ax+y$
+      \end{itemize}
+    \item Goals
+      \begin{itemize}
+      \item Raise level of programming abstraction
+      \item Robust implementation (e.g. avoid over/underflow)
+      \item Portable interface, efficient machine-specific implementation
+      \end{itemize}
+    \item BLAS 1 == $O(n^1)$ ops on $O(n^1)$ data
+    \item Used in LINPACK (and EISPACK?)
+    \end{itemize}
+  \end{itemize}
+  
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{History}
+  
+  BLAS 2 (1984--1986)
+  \begin{itemize}
+  \item Standard library of 25 ops (mostly) on matrix/vector pairs
+    \begin{itemize}
+    \item Different data types and matrix types
+    \item Example: DGEMV
+      \begin{itemize}
+      \item Double precision
+      \item GEneral matrix
+      \item Matrix-Vector product
+      \end{itemize}
+    \end{itemize}
+  \item Goals
+    \begin{itemize}
+    \item BLAS1 insufficient
+    \item BLAS2 for better vectorization (when vector machines roamed)
+    \end{itemize}
+  \item BLAS2 == $O(n^2)$ ops on $O(n^2)$ data
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{History}
+
+  BLAS 3 (1987--1988)
+  \begin{itemize}
+  \item Standard library of 9 ops (mostly) on matrix/matrix
+    \begin{itemize}
+    \item Different data types and matrix types
+    \item Example: DGEMM
+      \begin{itemize}
+      \item Double precision
+      \item GEneral matrix
+      \item Matrix-Matrix product
+      \end{itemize}
+    \item BLAS3 == $O(n^3)$ ops on $O(n^2)$ data
+    \end{itemize}
+  \item Goals
+    \begin{itemize}
+    \item Efficient cache utilization!
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{BLAS goes on}
+  
+  \begin{itemize}
+  \item \url{http://www.netlib.org/blas}
+  \item CBLAS interface standardized
+  \item Lots of implementations (MKL, Veclib, ATLAS, Goto, ...)
+  \item Still new developments (XBLAS, tuning for GPUs, ...)
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Why BLAS?}
+
+  Consider Gaussian elimination.
+
+  \vspace{5mm}
+  LU for $2 \times 2$:
+  \[
+  \begin{bmatrix}
+    a & b \\
+    c & d
+  \end{bmatrix} =
+  \begin{bmatrix}
+    1 & 0 \\
+    c/a & 1
+  \end{bmatrix}
+  \begin{bmatrix}
+    a & b \\
+    0 & d-bc/a
+  \end{bmatrix}
+  \]
+  Block elimination
+  \[
+  \begin{bmatrix}
+    A & B \\
+    C & D
+  \end{bmatrix} =
+  \begin{bmatrix}
+    I & 0 \\
+    CA^{-1} & I
+  \end{bmatrix}
+  \begin{bmatrix}
+    A & B \\
+    0 & D-CA^{-1}B
+  \end{bmatrix} 
+  \]
+
+  \vspace{5mm}
+  Block LU
+  \[
+  \begin{bmatrix}
+    A & B \\
+    C & D
+  \end{bmatrix} = 
+  \begin{bmatrix}
+    L_{11} & 0 \\
+    L_{12} & L_{22} 
+  \end{bmatrix}
+  \begin{bmatrix}
+    U_{11} & U_{12} \\
+    0 & U_{22} 
+  \end{bmatrix} =
+  \begin{bmatrix}
+    L_{11} U_{11} & L_{11} U_{12} \\
+    L_{12} U_{11} & L_{21} U_{12} + L_{22} U_{22}
+  \end{bmatrix}
+  \]
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Why BLAS?}
+
+  Block LU
+  \[
+  \begin{bmatrix}
+    A & B \\
+    C & D
+  \end{bmatrix} = 
+  \begin{bmatrix}
+    L_{11} & 0 \\
+    L_{12} & L_{22} 
+  \end{bmatrix}
+  \begin{bmatrix}
+    U_{11} & U_{12} \\
+    0 & U_{22} 
+  \end{bmatrix} =
+  \begin{bmatrix}
+    L_{11} U_{11} & L_{11} U_{12} \\
+    L_{12} U_{11} & L_{21} U_{12} + L_{22} U_{22}
+  \end{bmatrix}
+  \]
+
+Think of $A$ as $k \times k$, $k$ moderate:
+\begin{lstlisting}
+[L11,U11] = small_lu(A);   % Small block LU
+U12 = L11\B;               % Triangular solve
+L12 = C/U11;               % "
+S   = D-L21*U12;           % Rank k update
+[L22,U22] = lu(S);         % Finish factoring
+\end{lstlisting}
+Three level-3 BLAS calls!
+\begin{itemize}
+\item Two triangular solves
+\item One rank-$k$ update
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{LAPACK}
+
+  LAPACK (1989--present): \url{http://www.netlib.org/lapack}
+  \begin{itemize}
+  \item Supercedes earlier LINPACK and EISPACK
+  \item High performance through BLAS
+    \begin{itemize}
+    \item Parallel to the extent BLAS are parallel (on SMP)
+    \item Linear systems and least squares are nearly 100\% BLAS 3
+    \item Eigenproblems, SVD --- only about 50\% BLAS 3
+    \end{itemize}
+  \item Careful error bounds on everything
+  \item Lots of variants for different structures
+  \end{itemize}
+    
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{ScaLAPACK}
+
+  ScaLAPACK (1995--present): \url{http://www.netlib.org/scalapack}
+  \begin{itemize}
+  \item MPI implementations
+  \item Only a small subset of LAPACK functionality
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{PLASMA and MAGMA}
+
+  PLASMA and MAGMA (2008--present):
+  \begin{itemize}
+  \item Parallel LA Software for Multicore Architectures
+    \begin{itemize}
+    \item Target: Shared memory multiprocessors
+    \item Stacks on LAPACK/BLAS interfaces
+    \item Tile algorithms, tile data layout, dynamic scheduling
+    \item Other algorithmic ideas, too (randomization, etc)
+    \end{itemize}
+  \item Matrix Algebra for GPU and Multicore Architectures
+    \begin{itemize}
+    \item Target: CUDA, OpenCL, Xeon Phi
+    \item Still stacks (e.g. on CUDA BLAS)
+    \item Again: tile algorithms + data, dynamic scheduling
+    \item Mixed precision algorithms (+ iterative refinement)
+    \end{itemize}
+  \item Dist memory: PaRSEC / DPLASMA
+  \end{itemize}
+\end{frame}
+
+\end{document}
+
+%% \begin{frame}
+%%   \frametitle{Why is ScaLAPACK not all of LAPACK?}
+
+%%   Consider what LAPACK contains...
+%% \end{frame}
+
+
+%% \begin{frame}
+%%   \frametitle{Decoding LAPACK names}
+
+%%   \begin{itemize}
+%%   \item F77 $\implies$ limited characters per name
+%%   \item General scheme:
+%%     \begin{itemize}
+%%     \item Data type (double/single/double complex/single complex)
+%%     \item Matrix type (general/symmetric, banded/not banded)
+%%     \item Operation type
+%%     \end{itemize}
+%%   \item Example: DGETRF
+%%     \begin{itemize}
+%%     \item Double precision
+%%     \item GEneral matrix
+%%     \item TRiangular Factorization
+%%     \end{itemize}
+%%   \item Example: DSYEVX
+%%     \begin{itemize}
+%%     \item Double precision
+%%     \item General SYmmetric matrix
+%%     \item EigenValue computation, eXpert driver
+%%     \end{itemize}
+%%   \end{itemize}
+%% \end{frame}
+
+
+%% \begin{frame}
+%%   \frametitle{Structures}
+  
+%%   \begin{itemize}
+%%   \item General: general (GE), banded (GB), pair (GG), tridiag (GT)
+%%   \item Symmetric: general (SY), banded (SB), packed (SP), tridiag (ST)
+%%   \item Hermitian: general (HE), banded (HB), packed (HP)
+%%   \item Positive definite (PO), packed (PP), tridiagonal (PT)
+%%   \item Orthogonal (OR), orthogonal packed (OP)
+%%   \item Unitary (UN), unitary packed (UP)
+%%   \item Hessenberg (HS), Hessenberg pair (HG)
+%%   \item Triangular (TR), packed (TP), banded (TB), pair (TG)
+%%   \item Bidiagonal (BD)
+%%   \end{itemize}
+
+%% \end{frame}
+
+
+%% \begin{frame}
+%%   \frametitle{LAPACK routine types}
+
+%%   \begin{itemize}
+%%   \item Linear systems (general, symmetric, SPD)
+%%   \item Least squares (overdetermined, underdetermined, constrained, weighted)
+%%   \item Symmetric eigenvalues and vectors
+%%     \begin{itemize}
+%%     \item Standard: $Ax = \lambda x$
+%%     \item Generalized: $Ax = \lambda B x$
+%%     \end{itemize}
+%%   \item Nonsymmetric eigenproblems
+%%     \begin{itemize}
+%%     \item Schur form: $A = Q T Q^T$
+%%     \item Eigenvalues/vectors
+%%     \item Invariant subspaces
+%%     \item Generalized variants
+%%     \end{itemize}
+%%   \item SVD (standard/generalized)
+%%   \item Different interfaces
+%%     \begin{itemize}
+%%     \item Simple drivers
+%%     \item Expert drivers with error bounds, extra precision, etc
+%%     \item Low-level routines
+%%     \item ... and ongoing discussions! (e.g. about C interfaces)
+%%     \end{itemize}
+%%   \end{itemize}
+%% \end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Matrix vector product}
+
+  Simple $y = Ax$ involves two indices
+  \[
+    y_i = \sum_{j} A_{ij} x_j
+  \]
+  Can organize around either one:
+\begin{lstlisting}
+% Row-oriented
+for i = 1:n
+  y(i) = A(i,:)*x;
+end
+
+% Col-oriented
+y = 0;
+for j = 1:n
+  y = y + A(:,j)*x(j);
+end
+\end{lstlisting}
+... or deal with index space in other ways!
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Parallel matvec: 1D row-blocked}
+
+  \begin{center}
+    \includegraphics[width=0.5\textwidth]{figs/lec12mv1.pdf}
+  \end{center}
+
+  Receive broadcast ${\color{red} x_0}, {\color{blue} x_1}, {\color{green} x_2}$
+  into local $x_0$, $x_1$, $x_2$; then
+  \begin{align*}
+    \mbox{On {\color{red}P0:}\quad}
+    {\color{red} A_{00}} x_0 + 
+    {\color{red} A_{01}} x_1 +
+    {\color{red} A_{02}} x_2 &= {\color{red} y_0} \\
+    \mbox{On {\color{blue}P1:}\quad}
+    {\color{blue} A_{10}} x_0 +
+    {\color{blue} A_{11}} x_1 +
+    {\color{blue} A_{12}} x_2 &= {\color{blue} y_1} \\
+    \mbox{On {\color{green}P2:}\quad}
+    {\color{green} A_{20}} x_0 +
+    {\color{green} A_{21}} x_1 +
+    {\color{green} A_{22}} x_2 &= {\color{green} y_2}
+  \end{align*}
+
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Parallel matvec: 1D col-blocked}
+
+  \begin{center}
+    \includegraphics[width=0.5\textwidth]{figs/lec12mv2.pdf}
+  \end{center}
+
+  Independently compute \\
+  \begin{minipage}{0.3\textwidth}
+    \[
+      {\color{red}
+        z^{(0)} =
+        \begin{bmatrix} A_{00} \\ A_{10} \\ A_{20} \end{bmatrix} x_0
+      }
+      \]
+  \end{minipage}
+  \begin{minipage}{0.3\textwidth}
+    \[
+      {\color{blue}
+        z^{(1)} = 
+        \begin{bmatrix} A_{00} \\ A_{10} \\ A_{20} \end{bmatrix} x_1
+      }
+      \]
+  \end{minipage}
+  \begin{minipage}{0.3\textwidth}
+    \[
+      {\color{green}
+        z^{(2)} = 
+        \begin{bmatrix} A_{00} \\ A_{10} \\ A_{20} \end{bmatrix} x_2
+      }
+      \]
+  \end{minipage}
+
+  \vspace{3mm}
+  and perform reduction: 
+  $y = {\color{red} z^{(0)}} + {\color{blue} z^{(1)}} + {\color{green} z^{(2)}}$.
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Parallel matvec: 2D blocked}
+  
+  \begin{center}
+    \includegraphics[width=0.5\textwidth]{figs/lec12mv3.pdf}
+  \end{center}
+
+  \begin{itemize}
+  \item Involves broadcast {\em and} reduction
+  \item ... but with subsets of processors
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Parallel matvec: 2D blocked}
+
+  Broadcast ${\color{red} x_0}, {\color{yellow} x_1}$ to
+  local copies $x_0, x_1$ at {\color{red} P0} and {\color{blue} P2} \\
+  Broadcast ${\color{red} x_2}, {\color{yellow} x_3}$ to
+  local copies $x_2, x_3$ at {\color{yellow} P1} and {\color{green} P3} \\
+
+  \vspace{1mm}
+  In parallel, compute
+    \begin{align*}
+      {\color{red}
+      \begin{bmatrix}
+        A_{00} & A_{01} \\
+        A_{10} & A_{11}
+      \end{bmatrix}}
+      \begin{bmatrix}
+        x_0 \\ x_1
+      \end{bmatrix} &=
+      {\color{red}
+      \begin{bmatrix}
+        z_0^{(0)} \\ z_1^{(0)}
+      \end{bmatrix}}
+&
+      {\color{yellow}
+      \begin{bmatrix}
+        A_{02} & A_{03} \\
+        A_{12} & A_{13}
+      \end{bmatrix}}
+      \begin{bmatrix}
+        x_2 \\ x_3
+      \end{bmatrix} &=
+      {\color{yellow}
+      \begin{bmatrix}
+        z_0^{(1)} \\ z_1^{(1)}
+      \end{bmatrix}}
+\\
+      {\color{blue}
+      \begin{bmatrix}
+        A_{20} & A_{21} \\
+        A_{30} & A_{31}
+      \end{bmatrix}}
+      \begin{bmatrix}
+        x_0 \\ x_1
+      \end{bmatrix} &=
+      {\color{blue}
+      \begin{bmatrix}
+        z_2^{(3)} \\ z_3^{(3)}
+      \end{bmatrix}}
+&
+      {\color{green}
+      \begin{bmatrix}
+        A_{20} & A_{21} \\
+        A_{30} & A_{31}
+      \end{bmatrix}}
+      \begin{bmatrix}
+        x_0 \\ x_1
+      \end{bmatrix} &=
+      {\color{green}
+      \begin{bmatrix}
+        z_2^{(3)} \\ z_3^{(3)}
+      \end{bmatrix}}
+      \end{align*}
+
+\vspace{1mm}
+Reduce across rows:
+\begin{align*}
+  \begin{bmatrix}
+    {\color{red} y_0} \\
+    {\color{yellow} y_1}
+  \end{bmatrix} &=
+  {\color{red}
+  \begin{bmatrix}
+    z_0^{(0)} \\
+    z_1^{(0)}
+  \end{bmatrix}} +
+  {\color{yellow}
+  \begin{bmatrix}
+    z_0^{(1)} \\
+    z_1^{(1)}
+  \end{bmatrix}}
+&
+  \begin{bmatrix}
+    {\color{blue} y_2} \\
+    {\color{green} y_3}
+  \end{bmatrix} &=
+  {\color{blue}
+  \begin{bmatrix}
+    z_2^{(2)} \\
+    z_3^{(2)}
+  \end{bmatrix}} +
+  {\color{green}
+  \begin{bmatrix}
+    z_2^{(3)} \\
+    z_3^{(3)}
+  \end{bmatrix}}
+\end{align*}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Parallel matmul}
+
+  \begin{itemize}
+  \item Basic operation: $C = C+AB$
+  \item Computation: $2n^3$ flops
+  \item Goal: $2n^3/p$ flops per processor, minimal communication
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{1D layout}
+  
+  \begin{center}
+    \includegraphics[width=\textwidth]{figs/lec12mm1.pdf}
+  \end{center}
+
+  \begin{itemize}
+  \item Block MATLAB notation: $A(:,j)$ means $j$th block column
+  \item Processor $j$ owns $A(:,j)$, $B(:,j)$, $C(:,j)$
+  \item $C(:,j)$ depends on {\em all} of $A$, but only $B(:,j)$
+  \item How do we communicate pieces of $A$?
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{1D layout on bus (no broadcast)}
+
+  \begin{center}
+    \includegraphics[width=0.8\textwidth]{figs/lec12mm1.pdf}
+  \end{center}
+
+  \begin{itemize}
+  \item Everyone computes local contributions first
+  \item {\color{red} P0} sends {\color{red} $A(:,0)$} to
+    each processor $j$ in turn; \\
+    processor $j$ receives, computes $A(:,0) B(0,j)$
+  \item {\color{blue} P1} sends {\color{blue} $A(:,1)$} to
+    each processor $j$ in turn; \\
+    processor $j$ receives, computes $A(:,1) B(1,j)$
+  \item {\color{green} P2} sends {\color{green} $A(:,2)$} to
+    each processor $j$ in turn; \\
+    processor $j$ receives, computes $A(:,2) B(2,j)$
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{1D layout on bus (no broadcast)}
+
+  \begin{center}
+    \includegraphics[width=\textwidth]{figs/lec12mm2.pdf}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{1D layout on bus (no broadcast)}
+
+\begin{lstlisting}
+C(:,myproc) += A(:,myproc)*B(myproc,myproc)
+for i = 0:p-1
+  for j = 0:p-1
+    if (i == j)      continue;
+    if (myproc == i) i
+      send A(:,i) to processor j
+    if (myproc == j)
+      receive A(:,i) from i
+      C(:,myproc) += A(:,i)*B(i,myproc)
+    end
+  end
+end
+\end{lstlisting}
+Performance model?
+\end{frame}
+ 
+
+\begin{frame}
+  \frametitle{1D layout on bus (no broadcast)}
+
+  No overlapping communications, so in a simple $\alpha-\beta$ model:
+  \begin{itemize}
+  \item $p(p-1)$ messages
+  \item Each message involves $n^2/p$ data
+  \item Communication cost: $p(p-1) \alpha + (p-1) n^2 \beta$
+  \end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
+  \frametitle{1D layout on ring}
+
+  \begin{center}
+    \includegraphics[width=0.8\textwidth]{figs/lec12mm3.pdf}
+  \end{center}
+
+  \begin{itemize}
+  \item Every process $j$ can send data to $j+1$ simultaneously
+  \item Pass slices of $A$ around the ring until everyone sees
+    the whole matrix ($p-1$ phases).
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{1D layout on ring}
+
+\begin{lstlisting}
+tmp = A(myproc)
+C(myproc) += tmp*B(myproc,myproc)
+for j = 1 to p-1
+  sendrecv tmp to myproc+1 mod p, 
+           from myproc-1 mod p
+  C(myproc) += tmp*B(myproc-j mod p, myproc)
+\end{lstlisting}
+Performance model?
+\end{frame}
+ 
+
+\begin{frame}
+  \frametitle{1D layout on ring}
+
+  In a simple $\alpha-\beta$ model, at each processor:
+  \begin{itemize}
+  \item $p-1$ message sends (and simultaneous receives)
+  \item Each message involves $n^2/p$ data
+  \item Communication cost: $(p-1) \alpha + (1-1/p) n^2 \beta$
+  \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]
+  \frametitle{Outer product algorithm}
+
+  Serial: Recall outer product organization:
+\begin{lstlisting}
+for k = 0:s-1
+  C += A(:,k)*B(k,:);
+end
+\end{lstlisting}
+
+  \vspace{5mm}
+  Parallel: Assume $p = s^2$ processors, block $s \times s$ matrices. \\
+  For a $2 \times 2$ example:
+  \[
+  \begin{bmatrix}
+    C_{00} & C_{01} \\
+    C_{10} & C_{11}
+  \end{bmatrix} =
+  \begin{bmatrix}
+    A_{00} B_{00} & A_{00} B_{01} \\
+    A_{10} B_{00} & A_{10} B_{01} 
+  \end{bmatrix} +
+  \begin{bmatrix}
+    A_{01} B_{10} & A_{01} B_{11} \\
+    A_{11} B_{10} & A_{11} B_{11} 
+  \end{bmatrix}
+  \]
+
+\begin{itemize}
+\item
+  Processor for each $(i,j)$ $\implies$ parallel work for each $k$!
+\item
+  Note everyone in row $i$ uses $A(i,k)$ at once, \\
+  and everyone in row $j$ uses $B(k,j)$ at once.
+\end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Parallel outer product (SUMMA)}
+
+\begin{lstlisting}
+for k = 0:s-1
+  for each i in parallel
+    broadcast A(i,k) to row
+  for each j in parallel
+    broadcast A(k,j) to col
+  On processor (i,j), C(i,j) += A(i,k)*B(k,j);
+end
+\end{lstlisting}
+If we have tree along each row/column, then
+\begin{itemize}
+\item $\log(s)$ messages per broadcast
+\item $\alpha + \beta n^2/s^2$ per message
+\item $2 \log(s) (\alpha s + \beta n^2/s)$ total communication 
+\item Compare to 1D ring: $(p-1) \alpha + (1-1/p) n^2 \beta$
+\end{itemize}
+
+\vspace{2mm}
+Note: Same ideas work with block size $b < n/s$
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Cannon's algorithm}
+
+  \[
+  \begin{bmatrix}
+    C_{00} & C_{01} \\
+    C_{10} & C_{11}
+  \end{bmatrix} =
+  \begin{bmatrix}
+    A_{00} B_{00} & A_{01} B_{11} \\
+    A_{11} B_{10} & A_{10} B_{01} 
+  \end{bmatrix} +
+  \begin{bmatrix}
+    A_{01} B_{10} & A_{00} B_{01} \\
+    A_{10} B_{00} & A_{11} B_{11} 
+  \end{bmatrix}
+  \]
+
+  \vspace{5mm}
+  Idea: Reindex products in block matrix multiply 
+  \begin{align*}
+    C(i,j) &= \sum_{k = 0}^{p-1} A(i,k) B(k,j) \\
+          &= \sum_{k = 0}^{p-1} A(i,\, k+i+j \mod p) \; B(k+i+j \mod p, j)
+  \end{align*}
+  For a fixed $k$, a given block of $A$ (or $B$) is needed for
+  contribution to {\em exactly one} $C(i,j)$.
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Cannon's algorithm}
+
+\begin{lstlisting}
+% Move A(i,j) to A(i,i+j) 
+for i = 0 to s-1
+  cycle A(i,:) left by i
+
+% Move B(i,j) to B(i+j,j)
+for j = 0 to s-1
+  cycle B(:,j) up by j
+
+for k = 0 to s-1
+  in parallel;
+    C(i,j) = C(i,j) + A(i,j)*B(i,j);
+  cycle A(:,i) left by 1
+  cycle B(:,j) up by 1
+\end{lstlisting}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Cost of Cannon}
+
+  \begin{itemize}
+  \item Assume 2D torus topology
+  \item Initial cyclic shifts: $\leq s$ messages each ($\leq 2s$ total)
+  \item For each phase: $2$ messages each ($2s$ total)
+  \item Each message is size $n^2/s^2$
+  \item Communication cost: 
+    $4s(\alpha + \beta n^2/s^2) = 4(\alpha s + \beta n^2/s)$
+  \item This communication cost is optimal! \\
+    ... but SUMMA is simpler, more flexible, almost as good
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Speedup and efficiency}
+
+  Recall
+  \begin{align*}
+    \mathrm{Speedup}    & := t_{\mathrm{serial}} / t_{\mathrm{parallel}} \\
+    \mathrm{Efficiency} & := \mathrm{Speedup}/p
+  \end{align*}
+  
+  Assuming no overlap of communication and computation, efficiencies are
+  \begin{center}
+  \begin{tabular}{ll}
+    1D layout & $\left( 1+O\left( \frac{p}{n} \right) \right)^{-1}$ \\
+    SUMMA &  $\left( 1+O\left( \frac{\sqrt{p} \log p}{n} \right) \right)^{-1}$ \\
+    Cannon & $\left (1+O\left( \frac{\sqrt{p}}{n} \right) \right)^{-1}$
+  \end{tabular}
+  \end{center}
+\end{frame}
+
+
+
+\end{document}

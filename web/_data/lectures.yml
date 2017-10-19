@@ -110,10 +110,12 @@
 -
   date: 2017-10-17
   info: Dense linear algebra
-  hw: Final proposal
+  slides: 2017-10-17-slides.pdf
 -
   date: 2017-10-19
   info: Dense linear algebra
+  hw: Final proposal
+  slides: 2017-10-19-slides.pdf
 #
 # ==================
 # Week 10

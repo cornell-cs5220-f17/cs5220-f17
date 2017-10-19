@@ -13,7 +13,9 @@ LEC=\
 	pdf/2017-09-28-slides.pdf \
 	pdf/2017-10-03-slides.pdf \
 	notes/2017-10-05-notes.md \
-	pdf/2017-10-12-slides.pdf 
+	pdf/2017-10-12-slides.pdf \
+	pdf/2017-10-17-slides.pdf \
+	pdf/2017-10-19-slides.pdf 
 
 .PHONY: all copy
 all: $(LEC)
