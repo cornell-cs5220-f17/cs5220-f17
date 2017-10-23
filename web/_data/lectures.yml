@@ -123,7 +123,7 @@
 -
   date: 2017-10-24
   info: Sparse linear algebra
-  hw: HW5 due
+  slides: 2017-10-24-slides.pdf
 -
   date: 2017-10-26
   info: Sparse linear algebra
@@ -135,6 +135,7 @@
   date: 2017-10-31
   travel: IPAM meeting
   info: Transforms and data sparsity (Damle)
+  hw: HW5 due
 -
   date: 2017-11-02
   travel: IPAM meeting
