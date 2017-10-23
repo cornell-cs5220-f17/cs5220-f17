@@ -1,0 +1,546 @@
+\documentclass{beamer}
+
+\input{commons}
+
+\hdr{2017-10-24}{Iterations and Sparse LA}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% Resources:
+% - Books -- Templates and company
+% - Packages: PETSc and Trilinos (includes Hypre, ...); SLEPc for eigs
+% - ACTS collection
+% - Survey of parallel linear algebra software
+
+\begin{frame}
+  \frametitle{World of Linear Algebra}
+
+  \begin{itemize}
+  \item Dense methods (last week)
+    \begin{itemize}
+    \item Direct representation of matrices with
+      simple data structures (no need for indexing data structure)
+    \item Mostly $O(n^3)$ factorization algorithms
+    \end{itemize}
+  \item Sparse direct methods (Thurs)
+    \begin{itemize}
+    \item Direct representation, keep only the nonzeros
+    \item Factorization costs depend on problem structure
+      (1D cheap; 2D reasonable; 3D gets expensive; not easy to give a general
+      rule, and NP hard to order for optimal sparsity)
+    \item Robust, but hard to scale to large 3D problems
+    \end{itemize}
+  \item Iterative methods (today and Thurs)
+    \begin{itemize}
+    \item Only {\em need} $y = Ax$ (maybe $y = A^T x$)
+    \item Produce successively better (?) approximations
+    \item Good convergence depends on {\em preconditioning}
+    \item Best preconditioners are often hard to parallelize
+    \end{itemize}
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Linear Algebra Software: MATLAB}
+  
+\begin{lstlisting}
+% Dense (LAPACK)
+[L,U] = lu(A);
+x = U\(L\b);
+
+% Sparse direct (UMFPACK + COLAMD)
+[L,U,P,Q] = lu(A);
+x = Q*(U\(L\(P*b)));
+
+% Sparse iterative (PCG + incomplete Cholesky)
+tol = 1e-6;
+maxit = 500;
+R = cholinc(A,'0');
+x = pcg(A,b,tol,maxit,R',R);
+\end{lstlisting}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Linear Algebra Software: the Wider World}
+
+  \begin{itemize}
+  \item Dense: LAPACK, ScaLAPACK, PLAPACK
+  \item Sparse direct: UMFPACK, TAUCS, SuperLU, MUMPS, Pardiso, SPOOLES, ...
+  \item Sparse iterative: too many!
+  \item Sparse mega-libraries
+    \begin{itemize}
+    \item PETSc (Argonne, object-oriented C)
+    \item Trilinos (Sandia, C++)
+    \end{itemize}
+  \item Good references:
+    \begin{itemize}
+    \item {\em Templates for the Solution of Linear Systems} 
+      (on Netlib)
+    \item Survey on ``Parallel Linear Algebra Software'' \\
+      (Eijkhout, Langou, Dongarra -- look on Netlib)
+    \item ACTS collection at NERSC
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Software Strategies: Dense Case}
+
+  Assuming you want to {\em use} (vs develop) dense LA code:
+  \begin{itemize}
+  \item Learn enough to identify right algorithm \\
+    (e.g. is it symmetric? definite? banded? etc)
+  \item Learn high-level organizational ideas
+  \item Make sure you have a good BLAS
+  \item Call LAPACK/ScaLAPACK!
+  \item For $n$ large: wait a while
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Software Strategies: Sparse Direct Case}
+
+  Assuming you want to use (vs develop) sparse LA code
+  \begin{itemize}
+  \item Identify right algorithm (mainly Cholesky vs LU)
+  \item Get a good solver (often from list)
+    \begin{itemize}
+    \item You {\em don't} want to roll your own!
+    \end{itemize}
+  \item {\em Order your unknowns} for sparsity
+    \begin{itemize}
+    \item Again, good to use someone else's software!
+    \end{itemize}
+  \item For $n$ large, 3D: get lots of memory and wait
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Software Strategies: Sparse Iterative Case}
+
+  Assuming you want to use (vs develop) sparse LA software...
+  \begin{itemize}
+  \item Identify a good algorithm (GMRES? CG?)
+  \item Pick a good preconditioner
+    \begin{itemize}
+    \item Often helps to know the application
+    \item ... {\em and} to know how the solvers work!
+    \end{itemize}
+  \item Play with parameters, preconditioner variants, etc...
+  \item Swear until you get acceptable convergence?
+  \item Repeat for the next variation on the problem
+  \end{itemize}
+
+  \vspace{5mm}
+  Frameworks (e.g. PETSc or Trilinos) speed experimentation.
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Software Strategies: Stacking Solvers}
+
+  (Typical) example from a bone modeling package:
+  \begin{itemize}
+  \item Outer load stepping loop
+  \item Newton method corrector for each load step
+  \item Preconditioned CG for linear system
+  \item Multigrid preconditioner
+  \item Sparse direct solver for coarse-grid solve (UMFPACK)
+  \item LAPACK/BLAS under that
+  \end{itemize}
+
+  \vspace{5mm}
+  First three are high level --- I used a scripting language (Lua).
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Iterative Idea}
+
+  \begin{center}
+    \input{figs/fixedp.tikz}
+  \end{center}
+
+  \begin{itemize}
+  \item
+    $f$ is a {\em contraction} if $\|f(x)-f(y)\| < \|x-y\|$.
+  \item
+    $f$ has a unique {\em fixed point} $x_* = f(x_*)$.
+  \item
+    For $x_{k+1} = f(x_k)$, $x_k \rightarrow x_*$.
+  \item
+    If $\|f(x)-f(y)\| < \alpha \|x-y\|$, $\alpha < 1$, for all $x, y$, then
+    \[
+      \|x_k-x_*\| < \alpha^k \|x-x_*\|
+    \]
+  \item Looks good {\em if} $\alpha$ not too near 1...
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Stationary Iterations}
+
+  Write $Ax = b$ as $A = M-K$; get fixed point of
+  \[
+    M x_{k+1} = K x_k + b
+  \]
+  or
+  \[
+    x_{k+1} = (M^{-1} K) x_k + M^{-1} b.
+  \]
+
+  \vspace{5mm}
+  \begin{itemize}
+  \item Convergence if $\rho(M^{-1} K) < 1$
+  \item Best case for convergence: $M = A$
+  \item Cheapest case: $M = I$
+  \item Realistic: choose something between \\ \vspace{1mm}
+    \begin{tabular}{ll}
+      Jacobi & $M = \operatorname{diag}(A)$ \\
+      Gauss-Seidel & $M = \operatorname{tril}(A)$
+    \end{tabular}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Reminder: Discretized 2D Poisson Problem}
+
+  \begin{center}
+    \input{figs/poisson2d-stencil.tikz} \\
+  \vspace{10mm}
+  $
+    (Lu)_{i,j} = h^{-2} \left( 4u_{i,j}-u_{i-1,j}-u_{i+1,j}-u_{i,j-1}-u_{i,j+1} \right)
+  $
+  \end{center}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Jacobi on 2D Poisson}
+
+Assuming homogeneous Dirichlet boundary conditions 
+\begin{lstlisting}
+for step = 1:nsteps
+
+  for i = 2:n-1
+    for j = 2:n-1
+      u_next(i,j) = ...
+        ( u(i,j+1) + u(i,j-1) + ...
+          u(i-1,j) + u(i+1,j) )/4 - ...
+        h^2*f(i,j)/4;
+    end
+  end
+  u = u_next;
+
+end
+\end{lstlisting}
+Basically do some averaging at each step.
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Parallel version (5 point stencil)}
+  
+  \begin{center}
+    \begin{tikzpicture}
+      \draw[step=0.5,gray,very thin,dashed] (0,0) grid (3.5,3.5);
+      \draw[ultra thick] (0,1.75) -- (3.5,1.75);
+      \draw[ultra thick] (1.75,0) -- (1.75,3.5);
+      \begin{scope}[yshift=1.5cm]
+      \input{figs/poisson5pt.tikz}
+      \end{scope}
+    \end{tikzpicture}
+
+  \vspace{5mm}
+  \begin{tabular}{ll}
+  Boundary values: & white \\
+  Data on P0:      & green \\
+  Ghost cell data: & blue
+  \end{tabular}
+  \end{center}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Parallel version (9 point stencil)}
+  
+  \begin{center}
+    \begin{tikzpicture}
+      \draw[step=0.5,gray,very thin,dashed] (0,0) grid (3.5,3.5);
+      \draw[ultra thick] (0,1.75) -- (3.5,1.75);
+      \draw[ultra thick] (1.75,0) -- (1.75,3.5);
+      \begin{scope}
+      \input{figs/poisson9pt.tikz}
+      \end{scope}
+    \end{tikzpicture}
+
+  \vspace{5mm}
+  \begin{tabular}{ll}
+  Boundary values: & white \\
+  Data on P0:      & green \\
+  Ghost cell data: & blue
+  \end{tabular}
+  \end{center}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Parallel version (5 point stencil)}
+
+  \begin{center}
+    \input{figs/poisson2d-swap5.tikz}
+
+    Communicate ghost cells before each step.
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Parallel version (9 point stencil)}
+
+  \begin{center}
+    \input{figs/poisson2d-swap9ew.tikz}
+    
+  Communicate in two phases (\alert{EW}, NS) to get corners.
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Parallel version (9 point stencil)}
+
+  \begin{center}
+    \input{figs/poisson2d-swap9ns.tikz}
+
+  Communicate in two phases (EW, \alert{NS}) to get corners.
+  \end{center}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Gauss-Seidel on 2D Poisson}
+
+\begin{lstlisting}
+for step = 1:nsteps
+
+  for i = 2:n-1
+    for j = 2:n-1
+      u(i,j) = ...
+        ( u(i,j+1) + u(i,j-1) + ...
+          u(i-1,j) + u(i+1,j) )/4 - ...
+        h^2*f(i,j)/4;
+    end
+  end
+
+end
+\end{lstlisting}
+Bottom values depend on top; how to parallelize?
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Red-Black Gauss-Seidel}
+
+  \begin{center}
+    \input{figs/checker6x6.tikz}
+
+  \vspace{5mm}
+  Red depends only on black, and vice-versa. \\
+  Generalization: multi-color orderings
+  \end{center}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Red black Gauss-Seidel step}
+
+\begin{lstlisting}
+  for i = 2:n-1
+    for j = 2:n-1
+      if mod(i+j,2) == 0
+        u(i,j) = ...
+      end
+    end
+  end
+
+  for i = 2:n-1
+    for j = 2:n-1
+      if mod(i+j,2) == 1,
+      u(i,j) = ...
+    end
+  end
+\end{lstlisting}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{Parallel red-black Gauss-Seidel sketch}
+
+  At each step
+  \begin{itemize}
+  \item Send black ghost cells
+  \item Update red cells
+  \item Send red ghost cells
+  \item Update black ghost cells
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{More Sophistication}
+
+  \begin{itemize}
+  \item Successive over-relaxation (SOR): extrapolate Gauss-Seidel direction
+  \item Block Jacobi: let $M$ be a block diagonal matrix from $A$
+    \begin{itemize}
+    \item Other block variants similar
+    \end{itemize}
+  \item Alternating Direction Implicit (ADI): alternately solve on vertical
+    lines and horizontal lines
+  \item Multigrid
+  \end{itemize}
+  These are mostly just the opening act for...
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Krylov Subspace Methods}
+
+  What if we only know how to multiply by $A$? \\
+  About all you can do is keep multiplying!
+  \[
+    \mathcal{K}_k(A,b) = \operatorname{span}\left\{ 
+      b, A b, A^2 b, \ldots, A^{k-1} b \right\}.
+  \]
+  Gives surprisingly useful information!
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Example: Conjugate Gradients}
+
+  If $A$ is symmetric and positive definite,
+  $Ax = b$ solves a minimization:
+  \begin{align*}
+    \phi(x) &= \frac{1}{2} x^T A x - x^T  b\\
+    \nabla \phi(x) &= Ax - b.
+  \end{align*}
+  Idea: Minimize $\phi(x)$ over $\mathcal{K}_k(A,b)$. \\
+  Basis for the {\em method of conjugate gradients}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Example: GMRES}
+
+  Idea: Minimize $\|Ax-b\|^2$ over $\mathcal{K}_k(A,b)$. \\
+  Yields {\em Generalized Minimum RESidual} (GMRES) method.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Convergence of Krylov Subspace Methods}
+
+  \begin{itemize}
+  \item KSPs are {\em not} stationary (no constant fixed-point iteration)
+  \item Convergence is surprisingly subtle!
+  \item CG convergence upper bound via {\em condition number}
+    \begin{itemize}
+    \item Large condition number iff form $\phi(x)$ has long narrow bowl
+    \item Usually happens for Poisson and related problems
+    \end{itemize}
+  \item {\em Preconditioned} problem
+    $M^{-1} A x = M^{-1} b$ converges faster?
+  \item Whence $M$?  
+    \begin{itemize}
+    \item From a stationary method?
+    \item From a simpler/coarser discretization?
+    \item From approximate factorization?
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{PCG}
+
+\begin{minipage}{0.6\textwidth}
+\begin{tabbing}
+Compute $r^{(0)} = b - Ax$ \\
+for \= $i = 1, 2, \ldots$ \\
+\> solve $Mz^{(i-1)} = r^{(i-1)}$ \\
+\> $\rho_{i-1} = (r^{(i-1)})^T z^{(i-1)}$ \\
+\> if \= $i == 1$ \\
+\> \> $p^{(1)} = z^{(0)}$ \\
+\> else \\
+\> \> $\beta_{i-1} = \rho_{i-1}/\rho_{i-2}$ \\
+\> \> $p^{(i)} = z^{(i-1)} + \beta_{i-1} p^{(i-1)}$ \\
+\> endif \\
+\> $q^{(i)} = A p^{(i)}$ \\
+\> $\alpha_i = \rho_{i-1} / (p^{(i)})^T q^{(i)}$ \\
+\> $x^{(i)} = x^{(i-1)} + \alpha_i p^{(i)}$ \\
+\> $r^{(i)} = r^{(i-1)} - \alpha_i q^{(i)}$ \\
+end
+\end{tabbing}
+\end{minipage}
+\begin{minipage}{0.35\textwidth}
+  Parallel work:
+  \begin{itemize}
+    \item Solve with $M$
+    \item Product with $A$
+    \item Dot products
+    \item Axpys
+  \end{itemize}
+  Overlap comm/comp.
+\end{minipage}
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{PCG bottlenecks}
+
+  Key: fast solve with $M$, product with $A$
+  \begin{itemize}
+  \item Some preconditioners parallelize better! \\
+    (Jacobi vs Gauss-Seidel)
+  \item Balance speed with performance.
+    \begin{itemize}
+    \item Speed for set up of $M$?
+    \item Speed to apply $M$ after setup?
+    \end{itemize}
+  \item Cheaper to do two multiplies/solves at once...
+    \begin{itemize}
+    \item Can't exploit in obvious way --- lose stability
+    \item Variants allow multiple products --- Hoemmen's thesis
+    \end{itemize}
+  \item Lots of fiddling possible with $M$; 
+    matvec with $A$?
+  \end{itemize}
+
+\end{frame}
+
+\end{document}

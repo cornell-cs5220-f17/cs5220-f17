@@ -1,0 +1,69 @@
+\begin{tikzpicture}
+
+  \begin{scope}[yshift=3.5cm]
+    \input{figs/poisson5pt.tikz}
+  \end{scope}
+  
+  \begin{scope}[xshift=2.0cm]
+  \begin{scope}[rotate=90]
+    \input{figs/poisson5pt.tikz}
+  \end{scope}
+  \end{scope}
+
+  \begin{scope}[xshift=3.5cm,yshift=5.5cm]
+  \begin{scope}[rotate=-90]
+    \input{figs/poisson5pt.tikz}
+  \end{scope}
+  \end{scope}
+
+  \begin{scope}[xshift=5.5cm,yshift=2.0cm]
+  \begin{scope}[rotate=180]
+    \input{figs/poisson5pt.tikz}
+  \end{scope}      
+  \end{scope}
+
+  \draw (0.3,1.8) rectangle (1.7,2.2);  % SW ghost (top)
+  \draw (0.3,1.3) rectangle (1.7,1.7);  % SW data  (top)
+
+  \draw (1.8,0.3) rectangle (2.2,1.7);  % SW ghost (right)
+  \draw (1.3,0.3) rectangle (1.7,1.7);  % SW data  (right)
+  
+  \draw (0.3,3.8) rectangle (1.7,4.2);  % NW data  (bottom)
+  \draw (0.3,3.3) rectangle (1.7,3.7);  % NW ghost (bottom)
+
+  \draw (1.8,3.8) rectangle (2.2,5.2);  % NW ghost (right)
+  \draw (1.3,3.8) rectangle (1.7,5.2);  % NW data  (right)
+
+  \draw (3.8,1.8) rectangle (5.2,2.2);  % SE ghost (top)
+  \draw (3.8,1.3) rectangle (5.2,1.7);  % SE data  (top)
+
+  \draw (3.8,0.3) rectangle (4.2,1.7);  % SE data  (left)
+  \draw (3.3,0.3) rectangle (3.7,1.7);  % SE ghost (left)
+  
+  \draw (3.8,3.8) rectangle (5.2,4.2);  % NE data  (bottom)
+  \draw (3.8,3.3) rectangle (5.2,3.7);  % NE ghost (bottom)
+
+  \draw (3.8,3.8) rectangle (4.2,5.2);  % NE data  (left)
+  \draw (3.3,3.8) rectangle (3.7,5.2);  % NE ghost (left)
+
+  % SW/NW exchange
+  \draw[ultra thick,->] (0.3,4.0) to [out=-120,in=120] (0.3,2.0);
+  \draw[ultra thick,dashed,->] (0.3,1.5) to [out=120,in=-120] (0.3,3.5);
+
+  % SE/NE exchange
+  \draw[ultra thick,->] (5.2,4.0) to [out=-60,in=60] (5.2,2.0);
+  \draw[ultra thick,dashed,->] (5.2,1.5) to [out=60,in=-60] (5.2,3.5);
+
+  % SE/SW exchange
+  \draw[ultra thick,->] (4.0,0.3) to [out=-120,in=-60] (2.0,0.3);
+  \draw[ultra thick,dashed,->] (1.5,0.3) to [out=-60,in=-120] (3.5,0.3);
+
+  % SE/NE exchange
+  \draw[ultra thick,->] (5.2,4.0) to [out=-60,in=60] (5.2,2.0);
+  \draw[ultra thick,dashed,->] (5.2,1.5) to [out=60,in=-60] (5.2,3.5);
+
+  % NE/NW exchange
+  \draw[ultra thick,->] (4.0,5.2) to [out=120,in=60] (2.0,5.2);
+  \draw[ultra thick,dashed,->] (1.5,5.2) to [out=60,in=120] (3.5,5.2);
+  
+\end{tikzpicture}

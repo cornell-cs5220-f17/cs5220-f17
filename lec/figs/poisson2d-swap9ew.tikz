@@ -1,0 +1,45 @@
+\begin{tikzpicture}
+
+  \begin{scope}[yshift=2.0cm]
+    \input{figs/poisson9pt.tikz}
+  \end{scope}
+  
+  \begin{scope}[xshift=3.5cm]
+  \begin{scope}[rotate=90]
+    \input{figs/poisson9pt.tikz}
+  \end{scope}
+  \end{scope}
+
+  \begin{scope}[xshift=2.0cm,yshift=5.5cm]
+  \begin{scope}[rotate=-90]
+    \input{figs/poisson9pt.tikz}
+  \end{scope}
+  \end{scope}
+
+  \begin{scope}[xshift=5.5cm,yshift=3.5cm]
+  \begin{scope}[rotate=180]
+    \input{figs/poisson9pt.tikz}
+  \end{scope}      
+  \end{scope}
+
+  \draw (1.8,-0.2) rectangle (2.2,1.7);  % SW ghost (right)
+  \draw (1.3,-0.2) rectangle (1.7,1.7);  % SW data  (right)
+  
+  \draw (1.8,3.8) rectangle (2.2,5.7);  % NW ghost (right)
+  \draw (1.3,3.8) rectangle (1.7,5.7);  % NW data  (right)
+
+  \draw (3.8,-0.2) rectangle (4.2,1.7);  % SE data  (left)
+  \draw (3.3,-0.2) rectangle (3.7,1.7);  % SE ghost (left)
+  
+  \draw (3.8,3.8) rectangle (4.2,5.7);  % NE data  (left)
+  \draw (3.3,3.8) rectangle (3.7,5.7);  % NE ghost (left)
+
+  % SE/SW exchange
+  \draw[ultra thick,->] (4.0,-0.2) to [out=-120,in=-60] (2.0,-0.2);
+  \draw[ultra thick,dashed,->] (1.5,-0.2) to [out=-60,in=-120] (3.5,-0.2);
+
+  % NE/NW exchange
+  \draw[ultra thick,->] (4.0,5.7) to [out=120,in=60] (2.0,5.7);
+  \draw[ultra thick,dashed,->] (1.5,5.7) to [out=60,in=120] (3.5,5.7);
+  
+\end{tikzpicture}

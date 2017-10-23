@@ -1,0 +1,24 @@
+\begin{tikzpicture}[y=-1cm,scale=0.8]
+
+% objects at depth 50:
+\draw[->,black] (6.19125,4.36563) +(-143:1.19063) arc (-143:-37:1.19063);
+\draw[->,black] (11.43,4.36563) +(-143:1.19063) arc (-143:-37:1.19063);
+\filldraw[blue] (13.7795,4.1275) circle (0.0635cm);
+\filldraw[blue] (8.89,3.33375) circle (0.0635cm);
+\filldraw[blue] (3.81,2.54) circle (0.0635cm);
+\filldraw[black] (3.14325,4.445) circle (0.0635cm);
+\filldraw[black] (8.255,4.445) circle (0.0635cm);
+\filldraw[black] (13.335,4.445) circle (0.0635cm);
+\draw[arrows=to-to,black] (2.54,2.54) -- (2.54,5.08) -- (5.08,5.08);
+\draw[arrows=to-to,black] (7.62,2.54) -- (7.62,5.08) -- (10.16,5.08);
+\draw[arrows=to-to,black] (12.7,2.54) -- (12.7,5.08) -- (15.24,5.08);
+\path (3.96875,2.69875) node[text=black,anchor=base west] {\large{}$x_0$};
+\path (2.69875,4.92125) node[text=black,anchor=base west] {\large{}$x_*$};
+\path (7.77875,4.92125) node[text=black,anchor=base west] {\large{}$x_*$};
+\path (12.85875,4.92125) node[text=black,anchor=base west] {\large{}$x_*$};
+\path (9.04875,3.4925) node[text=black,anchor=base west] {\large{}$x_1$};
+\path (13.97,4.28625) node[text=black,anchor=base west] {\large{}$x_2$};
+\path (5.87375,3.01625) node[text=black,anchor=base west] {\large{}$f$};
+\path (11.1125,3.01625) node[text=black,anchor=base west] {\large{}$f$};
+
+\end{tikzpicture}%
