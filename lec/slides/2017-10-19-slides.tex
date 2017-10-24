@@ -176,6 +176,75 @@ Assuming communication and computation can potentially overlap
 
 
 \begin{frame}
+  \frametitle{Cannon's algorithm}
+
+  \[
+  \begin{bmatrix}
+    C_{00} & C_{01} \\
+    C_{10} & C_{11}
+  \end{bmatrix} =
+  \begin{bmatrix}
+    A_{00} B_{00} & A_{01} B_{11} \\
+    A_{11} B_{10} & A_{10} B_{01}
+  \end{bmatrix} +
+  \begin{bmatrix}
+    A_{01} B_{10} & A_{00} B_{01} \\
+    A_{10} B_{00} & A_{11} B_{11}
+  \end{bmatrix}
+  \]
+
+  \vspace{5mm}
+  Idea: Reindex products in block matrix multiply
+  \begin{align*}
+    C(i,j) &= \sum_{k = 0}^{p-1} A(i,k) B(k,j) \\
+          &= \sum_{k = 0}^{p-1} A(i,\, k+i+j \mod p) \; B(k+i+j \mod p, j)
+  \end{align*}
+  For a fixed $k$, a given block of $A$ (or $B$) is needed for
+  contribution to {\em exactly one} $C(i,j)$.
+
+\end{frame}
+
+
+\begin{frame}[fragile]
+  \frametitle{Cannon's algorithm}
+
+\begin{lstlisting}
+% Move A(i,j) to A(i,i+j)
+for i = 0 to s-1
+  cycle A(i,:) left by i
+
+% Move B(i,j) to B(i+j,j)
+for j = 0 to s-1
+  cycle B(:,j) up by j
+
+for k = 0 to s-1
+  in parallel;
+    C(i,j) = C(i,j) + A(i,j)*B(i,j);
+  cycle A(:,i) left by 1
+  cycle B(:,j) up by 1
+\end{lstlisting}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Cost of Cannon}
+
+  \begin{itemize}
+  \item Assume 2D torus topology
+  \item Initial cyclic shifts: $\leq s$ messages each ($\leq 2s$ total)
+  \item For each phase: $2$ messages each ($2s$ total)
+  \item Each message is size $n^2/s^2$
+  \item Communication cost:
+    $4s(\alpha + \beta n^2/s^2) = 4(\alpha s + \beta n^2/s)$
+  \item This communication cost is optimal! \\
+    ... but SUMMA is simpler, more flexible, almost as good
+  \end{itemize}
+\end{frame}
+
+
+
+\begin{frame}
   \frametitle{Reminder: Why matrix multiply?}
 
   \begin{center}
