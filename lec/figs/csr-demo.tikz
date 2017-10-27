@@ -50,7 +50,7 @@
   \draw [->] (5.75,1.0) -- (7.25,1.45); % 9
   \draw [->] (6.25,1.0) -- (8.25,1.45);
 
-  \draw (8.5,2.0) node[anchor=south west] {Data};
-  \draw (8.5,1.5) node[anchor=south west] {Row};
-  \draw (8.5,0.5) node[anchor=south west] {Ptr};
+  \draw (8.5,2.0) node[anchor=south west] {Adata};
+  \draw (8.5,1.5) node[anchor=south west] {col};
+  \draw (8.5,0.5) node[anchor=south west] {ptr};
 \end{tikzpicture}

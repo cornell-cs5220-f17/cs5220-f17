@@ -1,3 +1,5 @@
+TEXINPUTS:=.:/Users/dbindel/work/class/arch/cs5220-f15/lecture/2015-11-05/
+
 LEC=\
 	pdf/2017-08-22-slides.pdf \
 	pdf/2017-08-24-notes.pdf \
@@ -16,7 +18,8 @@ LEC=\
 	pdf/2017-10-12-slides.pdf \
 	pdf/2017-10-17-slides.pdf \
 	pdf/2017-10-19-slides.pdf \
-	pdf/2017-10-24-slides.pdf 
+	pdf/2017-10-24-slides.pdf \
+	pdf/2017-10-26-slides.pdf 
 
 .PHONY: all copy
 all: $(LEC)
