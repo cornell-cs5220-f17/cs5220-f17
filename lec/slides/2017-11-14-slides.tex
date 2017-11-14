@@ -1,0 +1,619 @@
+\documentclass{beamer}
+
+\input{commons}
+\pgfdeclarelayer{edgelayer}
+\pgfdeclarelayer{nodelayer}
+\pgfsetlayers{edgelayer,nodelayer,main}
+
+\hdr{2017-11-14}{Parallel Graph Algorithms}
+
+\begin{document}
+
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% Graph types and decorations
+% Different types of graphs: planar vs small world/power law
+% Different types of graph analyses
+% What is a ``big'' graph?  Replication as an option
+% Fundamental difficulties -- low cost, memory bound, limited BW
+% Preprocessing for locality
+% Graph data structures and their costs
+% Graph algorithms and linear algebra
+% Graph BLAS and linear algebra with semirings
+% Implicit graphs
+% Dynamic graphs
+% Parallel graph processing frameworks (including Ligra)
+% Fooling the masses + McSherry COST metric
+
+\begin{frame}
+  \frametitle{Graphs}
+
+  Mathematically: $G = (V,E)$ where $E \subset V \times V$
+  \begin{itemize}
+  \item Convention: $|V| = n$ and $|E| = m$
+  \item May be directed or undirected
+  \item May have weights $w_V : V \rightarrow \bbR$ or
+    $w_E : E : \rightarrow \bbR$
+  \item May have other node or edge attributes as well
+  \item Path is $\left[ \, (u_i,u_{i+1}) \, \right]_{i=1}^\ell \in E^*$,
+    sum of weights is length
+  \item Diameter is max shortest path length between any $s, t \in V$
+  \end{itemize}
+  Generalizations:
+  \begin{itemize}
+  \item Hypergraph (edges in $V^d$)
+  \item Multigraph (multiple copies of edges)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Types of graphs}
+
+  \begin{center}
+    \begin{tikzpicture}
+      \draw (0,0) -- (5,0);
+      \foreach \x in {0,...,5} {
+        \node at (\x, 0) [circle,draw=black,fill=blue] {};
+      }      
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Types of graphs}
+
+  \begin{center}
+    \begin{tikzpicture}
+      \node(r)  at (0,0) [circle,fill=blue] {};
+      \node(r0) at (-1,-1) [circle,fill=blue] {};
+      \node(r1) at ( 1,-1) [circle,fill=blue] {};
+      \node(r00) at (-1.5,-2) [circle,fill=blue] {};
+      \node(r01) at (-0.5,-2) [circle,fill=blue] {};
+      \node(r10) at ( 0.5,-2) [circle,fill=blue] {};
+      \node(r11) at ( 1.5,-2) [circle,fill=blue] {};
+      \draw (r) -- (r0);
+      \draw (r) -- (r1);
+      \draw (r0) -- (r00);
+      \draw (r0) -- (r01);
+      \draw (r1) -- (r10);
+      \draw (r1) -- (r11);
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Types of graphs}
+
+  \begin{center}
+    \begin{tikzpicture}
+      \draw (0,0) grid (5,5);
+      \foreach \x in {0,...,5}
+      \foreach \y in {0,...,5} {
+        \node at (\x, \y) [circle,draw=black,fill=blue] {};
+      }      
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Types of graphs}
+
+  \begin{center}
+    \begin{tikzpicture}
+      \draw (0,0) grid (5,2);
+      \draw (3,0) grid (5,5);
+      \foreach \x in {0,...,5}
+      \foreach \y in {0,...,2} {
+        \node at (\x, \y) [circle,draw=black,fill=blue] {};
+      }      
+      \foreach \x in {3,...,5}
+      \foreach \y in {0,...,5} {
+        \node at (\x, \y) [circle,draw=black,fill=blue] {};
+      }      
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Types of graphs}
+
+  \begin{center}
+    \begin{tikzpicture}
+      \input{figs/part_esep_spectral.tikz}
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Types of graphs}
+
+  \begin{center}
+    \input{figs/Karate_new.tikz}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Types of graphs}
+
+  Many possible structures:
+  \begin{itemize}
+  \item Lines and trees
+  \item Completely regular grids
+  \item Planar graphs (no edges need cross)
+  \item Low-dimensional Euclidean
+  \item Power law graphs
+  \item ...
+  \end{itemize}
+  Algorithms are not one-size-fits-all!
+\end{frame}
+
+\begin{frame}
+  \frametitle{Ends of a spectrum}
+
+  \begin{center}
+    \begin{tabular}{r|l|l}
+      & Planar & Power law \\ \hline
+      Vertex degree & Uniformly small &
+      $P(\mathrm{deg} = k) \sim k^{-\gamma}$ \\
+      Radius & $\Omega(\sqrt{n})$ & Small \\
+      Edge separators & $O(\sqrt{n})$ & nothing small \\
+      Linear solve & Direct OK & Iterative \\
+      Prototypical apps & PDEs & Social networks
+    \end{tabular}
+
+    \vspace{1cm}
+    Calls for different methods!
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Applications: Routing and shortest paths}
+
+  \begin{center}
+    \includegraphics[width=0.5\textwidth]{figs/ithaca2nyc.pdf}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Applications: Traversal, ranking, clustering}
+
+  \begin{center}
+    \input{figs/sample-net.tikz}
+  \end{center}
+
+  \begin{itemize}
+    \item Web crawl / traversal
+    \item PageRank, HITS
+    \item Clustering similar documents
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Applications: Sparse solvers}
+
+  \begin{center}
+    \href{http://yifanhu.net/GALLERY/GRAPHS/GIF_SMALL/Pothen@barth5.html}{\includegraphics[width=0.5\textwidth]{figs/Pothen-barth5.jpg}}
+  \end{center}
+
+  \begin{itemize}
+  \item Ordering for sparse factorization
+  \item Partitioning
+  \item Graph coarsening for AMG
+  \item Other preconditioning ops...
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Applications: Dimensionality reduction}
+
+  \begin{center}
+    \href{http://web.mit.edu/cocosci/isomap/isomap.html}{\includegraphics[width=0.8\textwidth]{figs/web1.jpg}}
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Common building blocks}
+
+  \begin{itemize}
+  \item Traversals
+  \item Shortest paths
+  \item Spanning tree
+  \item Flow computations
+  \item Topological sort
+  \item Coloring
+  \item ...
+  \end{itemize}
+  ... and most of sparse linear algebra.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Over-simple models}
+
+    \begin{center}
+    \begin{tikzpicture}
+      \node (n0) at (-1,0) [circle,fill=blue!50] {$0$};
+      \node (n1) at (-1,-1) [circle,fill=green] {$1$};
+      \node (n2) at ( 1,-1) [circle,fill=green] {$1$};
+      \node (n3) at (-3,-2) [circle,fill=black!20] {$2$};
+      \node (n4) at (-1,-2) [circle,fill=black!20] {$2$};
+      \node (n5) at ( 0,-2) [circle,fill=black!20] {$2$};
+      \node (n6) at ( 1,-2) [circle,fill=black!20] {$2$};
+      \node (n7) at ( 1,-3) [circle,fill=cyan] {$3$};
+      \node (n8) at ( 3,-3) [circle,fill=cyan] {$3$};
+      \draw[->] (n0) -- (n1);
+      \draw[->] (n0) -- (n2);
+      \draw[->] (n0) -- (n3);
+      \draw[->] (n1) -- (n3);
+      \draw[->] (n1) -- (n4);
+      \draw[->] (n1) -- (n5);
+      \draw[->] (n1) -- (n6);
+      \draw[->] (n2) -- (n6);
+      \draw[->] (n6) -- (n7);
+      \draw[->] (n6) -- (n8);
+      \draw[->] (n2) -- (n8);
+    \end{tikzpicture}
+    \end{center}
+    Let $t_p = $ idealized time on $p$ processors
+    \begin{itemize}
+    \item $t_1 = $ work
+    \item $t_\infty = $ span (or depth, or critical path length)
+    \end{itemize}
+
+\end{frame}
+
+\begin{frame}
+  \frametitle{One implication}
+
+  Don't bother with parallel DFS!  Span is $\Omega(n)$. \\
+  Let's spend a few minutes on more productive algorithms...
+\end{frame}
+
+\begin{frame}
+  \frametitle{Parallel BFS}
+
+  Simple idea: parallelize across frontiers
+  \begin{itemize}
+  \item Pro: Simple to think about
+  \item Pro: Lots of parallelism with small radius?
+  \item Con: What if frontiers are small?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Parallel BFS: Ullman-Yannakakis}
+
+  Assuming a high-diameter graph:
+  \begin{itemize}
+  \item Form set $S$ with start + random nodes, $|S| = \Theta(\sqrt{n}
+    \log n)$ --- long shortest paths must go through $S$ with high prob
+  \item Take $\sqrt{n}$ steps of BFS from each seed in $S$
+  \item Form aux weighted graph for distances between seeds
+  \item Run all-pairs shortest path on aux graph
+  \end{itemize}
+  OK, but what if diameter is not large?
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{LA take}
+
+  \begin{itemize}
+  \item Indicate frontier at each stage by $x$
+  \item $x' = A^T x$ (multiply=select, add=min)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Parallel BFS: LA perspective}
+
+  Key ideas:
+  \begin{itemize}
+  \item At some point, switch from top-down expanding frontier (``are you my
+    child?'') to bottom-up checking for parents (``are you my parent?'')
+  \item Use 2D blocking of adjacency
+  \item Temporally partition work: vertex processed by at most one
+    processor at a time, cycle processors (``systolic rotation'')
+  \end{itemize}
+  Together gives state-of-art performance.  But...
+\end{frame}
+
+\begin{frame}
+  \frametitle{Single-source shortest path}
+
+  Classic algorithm: Dijkstra
+  \begin{itemize}
+  \item Dequeue closest point from frontier and expand frontier
+  \item Update priority queue of distances (can be done in parallel)
+  \item Repeat
+  \end{itemize}
+  Or run serial Dijkstra from different sources for APSP.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Alternate idea: label correcting}
+
+  Initialize $d[u]$ with distance over-estimates to source
+  \begin{itemize}
+  \item $d[s] = 0$
+  \item Repeatedly relax $d[u] := \min_{(v,u) \in E} d[v] + w(v,u)$
+  \end{itemize}
+  Converges (eventually) as long as all nodes visited repeatedly,
+  updates are atomic.  If serial sweep in a consistent order, call
+  it Bellman-Ford.
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Single-source shortest path: $\Delta$-stepping}
+
+  Alternate approach: {\em hybrid} algorithm
+  \begin{itemize}
+  \item Process a ``bucket'' at a time
+  \item Relax ``light'' edges (weight < $\Delta$) which might add to
+    current bucket
+  \item When bucket empties, relax ``heavy'' edges a la Dijkstra
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Maximal independent sets}
+
+  \begin{itemize}
+  \item $S \subset V$ {\em independent} if none are neighbors.
+  \item {\em Maximal} if no others can be added and remain
+    independent.
+  \item {\em Maximum} if no other maximal independent set is bigger.
+  \item Maximum is NP-hard; maximal is easy in one processor
+  \end{itemize}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Simple greedy MIS}
+
+  \begin{center}
+    \begin{tikzpicture}
+      \input{figs/mis_serial.tikz}
+    \end{tikzpicture}
+  \end{center}
+  
+  \begin{itemize}
+  \item Start with $S$ empty
+  \item For each $v \in V$ {\em sequentially}, add $v$ to $S$ if possible.
+  \end{itemize}
+
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Luby's algorithm}
+
+  \begin{itemize}
+  \item Init $S := \emptyset$
+  \item Init candidates $C := V$
+  \item While $C \neq \emptyset$
+    \begin{itemize}
+    \item Label each $v$ with a random $r(v)$
+    \item For each $v \in C$ in parallel, if $r(v) <
+      \min_{\mathcal{N}(v)} r(u)$
+      \begin{itemize}
+      \item Move $v$ from $C$ to $S$
+      \item Remove neighbors from $v$ to $C$
+      \end{itemize}
+    \end{itemize}
+  \end{itemize}
+  Very probably finishes in $O(\log n)$ rounds.
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Luby's algorithm (round 1)}
+
+  \begin{center}
+    \begin{tikzpicture}
+      \input{figs/mis_luby1.tikz}
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{Luby's algorithm (round 1)}
+
+  \begin{center}
+    \begin{tikzpicture}
+      \input{figs/mis_luby2.tikz}
+    \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+
+\begin{frame}
+  \frametitle{A fundamental problem}
+
+  Many graph ops are
+  \begin{itemize}
+  \item Computationally cheap (per node or edge)
+  \item Bad for locality
+  \end{itemize}
+  {\bf Memory bandwidth} as a limiting factor.
+\end{frame}
+
+\begin{frame}
+  \frametitle{Big data?}
+
+  Consider:
+  \begin{itemize}
+  \item 323 million in US (fits in 32-bit int)
+  \item About 350 Facebook friends each
+  \item Compressed sparse row: about 450 GB
+  \end{itemize}
+  Topology (no metadata) on one big cloud node...
+\end{frame}
+
+\begin{frame}
+  \frametitle{Graph representation: Adjacency matrix}
+
+  \begin{center}
+    \begin{tikzpicture}
+      \input{figs/part_matrix.tikz}
+    \end{tikzpicture}
+
+    Pro: efficient for dense graphs \\
+    Con: wasteful for sparse case...
+  \end{center}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Graph representation: Coordinate}
+
+  \begin{itemize}
+  \item Tuples: $(i,j,w_{ij})$
+  \item Pro: Easy to update
+  \item Con: Slow for multiply
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Graph representation: Adj list}
+
+  \begin{itemize}
+  \item Linked lists of adjacent nodes
+  \item Pro: Still easy to update
+  \item Con: May cost more to store than coord?
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Graph representations: CSR}
+  
+  \begin{center}
+    \input{figs/csr-demo.tikz}
+
+    Pro: traversal?  Con: updates
+  \end{center}  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Graph representations: implicit}
+
+  \begin{itemize}
+  \item Idea: Never materialize a graph data structure
+  \item Key: Provide traversal primitives
+  \item Pro: Explicit rep'n sometimes overkill for one-off graphs?
+  \item Con: Hard to use canned software (except NLA?)
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Graph algorithms and linear algebra}
+
+  \begin{itemize}
+  \item Looks like LA
+    \begin{itemize}
+    \item Floyd-Warshall
+    \item Breadth-first search?
+    \end{itemize}
+  \item Really is standard LA
+    \begin{itemize}
+    \item Spectral partitioning and clustering
+    \item PageRank and some other centralities
+    \item ``Laplacian Paradigm'' (Spielman, Teng, others...)
+    \end{itemize}
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Graph algorithms and linear algebra}
+
+  {\em Semirings} have $\oplus$ and $\otimes$ s.t.
+  \begin{itemize}
+  \item Addition is commutative+associative with an identity 0
+  \item Multiplication is associative with identity 1
+  \item Both are distributive
+  \item $a \otimes 0 = 0 \otimes a = 0$
+  \item But no subtraction or division
+  \end{itemize}
+  Technically have {\em modules} (vs vector spaces) over semirings
+\end{frame}
+
+\begin{frame}
+  \frametitle{Graph algorithms and linear algebra}
+
+  Example: min-plus
+  \begin{itemize}
+  \item $\oplus = \min$ and additive identity $0 \equiv \infty$
+  \item $\otimes = +$ and multiplicative identity $1 \equiv 0$
+  \item Useful for breadth-first search (on board)
+  \end{itemize}
+  
+\end{frame}
+
+\begin{frame}
+  \frametitle{Graph BLAS}
+
+  \begin{center}
+    \url{http://www.graphblas.org/}
+  \end{center}
+  \begin{itemize}
+  \item Provisional API as of late May 2017
+  \item (Opaque) internal sparse matrix data structure
+  \item Allows operations over misc semirings
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Graph frameworks}
+
+  Several to choose from!
+  \begin{itemize}
+  \item Pregel, Apache Giraph, Stanford GPS, ...
+  \item GraphLab family
+    \begin{itemize}
+    \item GraphLab: Original distributed memory
+    \item PowerGraph: Tuned toward ``natural'' (power law) networks
+    \item GraphChi: {\em Chi}huahua -- shared memory vs distributed
+    \end{itemize}
+  \item Outperformed by Galois, Ligra, BlockGRACE, others
+  \item But... programming model was easy
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{Graph frameworks}
+
+  \begin{itemize}
+  \item ``Think as a vertex''
+    \begin{itemize}
+    \item Each vertex updates locally
+    \item Exchanges messages with neighbors
+    \item Runtime actually schedules updates/messages
+    \end{itemize}
+  \item Message sent at super-step $S$ arrives at $S+1$
+  \item Looks like BSP
+  \end{itemize}
+\end{frame}
+
+\begin{frame}
+  \frametitle{At what COST?}
+
+  \begin{center}
+    ``Scalability!  But at what COST?'' \\
+    McSherry, Isard, Murray \\
+    HotOS 15
+  \end{center}
+
+  \begin{quote}
+    You can have a second computer once you've shown you know how to
+    use the first one. \\ \hfill -- Paul Barham (quoted in intro to
+    HotOS15 paper)
+  \end{quote}
+  \begin{itemize}
+  \item COST = Configuration that Outperforms a Single Thread
+  \item Observation: many systems have unbounded COST!
+  \end{itemize}
+\end{frame}
+
+\end{document}

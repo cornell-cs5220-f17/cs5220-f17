@@ -1,0 +1,66 @@
+\begin{tikzpicture}[scale=0.4]
+
+\begin{scope}
+\node [draw,circle,scale=1.240864,ultra thick,fill=red!50] (1) at (-3.500000, 1.250000) {};
+\node [draw,circle,scale=1.231051,ultra thick,fill=red!50] (2) at (-1.000000, 2.500000) {};
+\node [draw,circle,scale=0.872732,ultra thick,fill=red!50] (3) at (-2.750000, -2.000000) {};
+\node [draw,circle,scale=0.928713,ultra thick,fill=red!50] (4) at (2.000000, 0.000000) {};
+\node [draw,circle,scale=1.264655,ultra thick,fill=red!50] (5) at (1.750000, 2.250000) {};
+\node [draw,circle,scale=0.915857,ultra thick,fill=red!50] (6) at (0.500000, -2.000000) {};
+\node [draw,circle,scale=2.000000,ultra thick,fill=red!50] (7) at (-0.500000, 0.250000) {};
+\draw [line width=1.500000 mm] (1) to (2);
+\draw [line width=1.500000 mm] (1) to (3);
+\draw [line width=1.500000 mm] (2) to (5);
+\draw [line width=1.500000 mm] (4) to (5);
+\draw [line width=1.500000 mm] (4) to (6);
+\draw [line width=1.500000 mm] (1) to (7);
+\draw [line width=1.500000 mm] (2) to (7);
+\draw [line width=1.500000 mm] (3) to (7);
+\draw [line width=1.500000 mm] (5) to (7);
+\draw [line width=1.500000 mm] (6) to (7);
+\node [below,align=center] at (-0.75,-2.5) {Unweighted};
+\end{scope}
+
+\begin{scope}[xshift=8cm]
+\node [draw,circle,scale=2.000000,ultra thick,fill=red!100] (1) at (-3.500000, 1.250000) {};
+\node [draw,circle,scale=1.053931,ultra thick,fill=red!0] (2) at (-1.000000, 2.500000) {};
+\node [draw,circle,scale=0.842809,ultra thick,fill=red!0] (3) at (-2.750000, -2.000000) {};
+\node [draw,circle,scale=0.400894,ultra thick,fill=red!0] (4) at (2.000000, 0.000000) {};
+\node [draw,circle,scale=0.745137,ultra thick,fill=red!0] (5) at (1.750000, 2.250000) {};
+\node [draw,circle,scale=0.446523,ultra thick,fill=red!0] (6) at (0.500000, -2.000000) {};
+\node [draw,circle,scale=1.624369,ultra thick,fill=red!0] (7) at (-0.500000, 0.250000) {};
+\draw [line width=1.500000 mm] (1) to (2);
+\draw [line width=1.500000 mm] (1) to (3);
+\draw [line width=1.500000 mm] (2) to (5);
+\draw [line width=1.500000 mm] (4) to (5);
+\draw [line width=1.500000 mm] (4) to (6);
+\draw [line width=1.500000 mm] (1) to (7);
+\draw [line width=1.500000 mm] (2) to (7);
+\draw [line width=1.500000 mm] (3) to (7);
+\draw [line width=1.500000 mm] (5) to (7);
+\draw [line width=1.500000 mm] (6) to (7);
+\node [below,align=center] at (-0.75,-2.5) {Node weighted};
+\end{scope}
+
+\begin{scope}[xshift=16cm]
+\node [draw,circle,scale=2.000000,ultra thick,fill=red!50] (1) at (-3.500000, 1.250000) {};
+\node [draw,circle,scale=1.934370,ultra thick,fill=red!50] (2) at (-1.000000, 2.500000) {};
+\node [draw,circle,scale=1.185575,ultra thick,fill=red!50] (3) at (-2.750000, -2.000000) {};
+\node [draw,circle,scale=1.830214,ultra thick,fill=red!50] (4) at (2.000000, 0.000000) {};
+\node [draw,circle,scale=1.938059,ultra thick,fill=red!50] (5) at (1.750000, 2.250000) {};
+\node [draw,circle,scale=1.190689,ultra thick,fill=red!50] (6) at (0.500000, -2.000000) {};
+\node [draw,circle,scale=1.028430,ultra thick,fill=red!50] (7) at (-0.500000, 0.250000) {};
+\draw [line width=2.500000 mm] (1) to (2);
+\draw [line width=2.500000 mm] (1) to (3);
+\draw [line width=2.500000 mm] (2) to (5);
+\draw [line width=2.500000 mm] (4) to (5);
+\draw [line width=2.500000 mm] (4) to (6);
+\draw [line width=0.500000 mm] (1) to (7);
+\draw [line width=0.500000 mm] (2) to (7);
+\draw [line width=0.500000 mm] (3) to (7);
+\draw [line width=0.500000 mm] (5) to (7);
+\draw [line width=0.500000 mm] (6) to (7);
+\node [below,align=center] at (-0.75,-2.5) {Edge weighted};
+\end{scope}
+
+\end{tikzpicture}
